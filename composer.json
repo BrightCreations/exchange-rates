@@ -1,0 +1,37 @@
+{
+    "type": "library",
+    "name": "brights/exchange-rates",
+    "description": "A Laravel package for fetching exchange rates from various sources.",
+    "version": "v1.0.0",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Bright Creations",
+            "email": "kareem.shaaban@brightcreations.com"
+        }
+    ],
+    "keywords": [
+        "laravel",
+        "exchange rates",
+        "currency conversion"
+    ],
+    "autoload": {
+        "psr-4": {
+            "Brights\\ExchangeRatesService\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Brights\\ExchangeRatesService\\ExchangeRatesServiceProvider"
+            ]
+        }
+    },
+    "require": {
+        "php": ">=8.1",
+        "illuminate/support": "^9.0|^10.0|^11.0",
+        "illuminate/database": "^10.0 || ^11.0",
+        "illuminate/http": "^10.0 || ^11.0",
+        "illuminate/console": "^10.0 || ^11.0"
+    }
+}
