@@ -20,7 +20,7 @@ composer require brights/exchange-rates
 To configure the package, publish the configuration file using the following command:
 
 ```bash
-php artisan vendor:publish --provider="Brights\ExchangeRatesService\ExchangeRatesServiceProvider"
+php artisan vendor:publish --provider="Brights\ExchangeRates\ExchangeRatesServiceProvider"
 ```
 
 Then, update the `exchange-rates.php` configuration file to suit your needs.

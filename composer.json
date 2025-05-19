@@ -17,13 +17,13 @@
     ],
     "autoload": {
         "psr-4": {
-            "Brights\\ExchangeRatesService\\": "src/"
+            "Brights\\ExchangeRates\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "Brights\\ExchangeRatesService\\ExchangeRatesServiceProvider"
+                "Brights\\ExchangeRates\\ExchangeRatesServiceProvider"
             ]
         }
     },
