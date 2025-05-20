@@ -17,8 +17,6 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Http;
 
-use function Symfony\Component\Clock\now;
-
 class ExchangeRateApiService extends BaseExchangeRateService implements ExchangeRateServiceInterface, HistoricalSupportExchangeRateServiceInterface
 {
     use CollectableResponse,
@@ -59,7 +57,7 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
                 'base_currency_code'    => $currency_code,
                 'target_currency_code'  => $code,
                 'exchange_rate'         => $rate,
-                'last_update_date'      => now(),
+                'last_update_date'      => Carbon::now(),
             ]);
             $data->push($record);
         }
@@ -116,7 +114,7 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
                 'target_currency_code'  => $code,
                 'exchange_rate'         => $rate,
                 'date_time'             => $date_time,
-                'last_update_date'      => now(),
+                'last_update_date'      => Carbon::now(),
             ]);
             $data->push($record);
         }

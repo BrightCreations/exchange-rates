@@ -5,11 +5,10 @@ namespace Brights\ExchangeRates\Concretes\Repositories;
 use Brights\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
 use Brights\ExchangeRates\Models\CurrencyExchangeRate;
 use Brights\ExchangeRates\Models\CurrencyExchangeRateHistory;
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-
-use function Symfony\Component\Clock\now;
 
 class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryInterface
 {
@@ -22,7 +21,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 'base_currency_code' => $base_currency_code,
                 'target_currency_code' => $code,
                 'exchange_rate' => $rate,
-                'last_update_date' => now(),
+                'last_update_date' => Carbon::now(),
             ];
         }
         return DB::table(CurrencyExchangeRate::$tablename)->upsert(
@@ -41,7 +40,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 'target_currency_code'  => $code,
                 'exchange_rate'         => $rate,
                 'date_time'             => $date_time,
-                'last_update_date'      => now(),
+                'last_update_date'      => Carbon::now(),
             ];
         }
 

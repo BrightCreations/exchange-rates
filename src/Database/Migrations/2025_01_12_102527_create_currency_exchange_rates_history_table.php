@@ -1,10 +1,9 @@
 <?php
 
+use Carbon\Carbon;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-
-use function Symfony\Component\Clock\now;
 
 return new class extends Migration
 {
@@ -19,7 +18,7 @@ return new class extends Migration
             $table->string('target_currency_code', 3);
             $table->string('exchange_rate', 20);
             $table->dateTime('date_time');
-            $table->timestamp('last_update_date')->default(now());
+            $table->timestamp('last_update_date')->default(Carbon::now());
 
             $table->unique([
                 'base_currency_code',
