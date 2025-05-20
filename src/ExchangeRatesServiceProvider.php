@@ -15,21 +15,10 @@ class ExchangeRatesServiceProvider extends ServiceProvider
             __DIR__ . '/../config/exchange-rates.php' => $this->app->configPath('exchange-rates.php'),
         ], 'exchange-rates-config');
 
-        // Publish views
-        $this->publishes([
-            __DIR__ . '/../resources/views' => $this->app->resourcePath('views/vendor/exchange-rates'),
-        ], 'exchange-rates-views');
-
         // Publish Migrations
         $this->publishes([
-            __DIR__ . '/Database/migrations' => $this->app->databasePath('migrations'),
+            __DIR__ . '/Database/Migrations' => $this->app->databasePath('migrations'),
         ], 'exchange-rate-migrations');
-
-        // Load routes
-        $this->loadRoutesFrom(__DIR__ . '/../routes/web.php');
-
-        // Load views
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'exchange-rates');
 
         // Load Migrations
         $this->loadMigrationsFrom(__DIR__ . '/Database/Migrations');
