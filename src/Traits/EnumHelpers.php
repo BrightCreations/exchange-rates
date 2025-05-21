@@ -1,6 +1,6 @@
 <?php
 
-namespace Brights\ExchangeRates\Traits;
+namespace BC\ExchangeRates\Traits;
 
 use Exception;
 

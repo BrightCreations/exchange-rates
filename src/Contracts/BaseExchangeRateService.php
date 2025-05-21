@@ -1,6 +1,6 @@
 <?php
 
-namespace Brights\ExchangeRates\Contracts;
+namespace BC\ExchangeRates\Contracts;
 
 abstract class BaseExchangeRateService implements ExchangeRateServiceInterface
 {

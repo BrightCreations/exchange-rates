@@ -1,10 +1,10 @@
 <?php
 
-namespace Brights\ExchangeRates\Concretes\Repositories;
+namespace BC\ExchangeRates\Concretes\Repositories;
 
-use Brights\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
-use Brights\ExchangeRates\Models\CurrencyExchangeRate;
-use Brights\ExchangeRates\Models\CurrencyExchangeRateHistory;
+use BC\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
+use BC\ExchangeRates\Models\CurrencyExchangeRate;
+use BC\ExchangeRates\Models\CurrencyExchangeRateHistory;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;

@@ -13,14 +13,14 @@ The Exchange Rates Service package provides a simple and efficient way to retrie
 To install the Exchange Rates Service package, run the following command in your terminal:
 
 ```bash
-composer require brights/exchange-rates
+composer require bc/exchange-rates
 ```
 
 ## Configuration
 To configure the package, publish the configuration file using the following command:
 
 ```bash
-php artisan vendor:publish --provider="Brights\ExchangeRates\ExchangeRatesServiceProvider"
+php artisan vendor:publish --provider="BC\ExchangeRates\ExchangeRatesServiceProvider"
 ```
 
 Then, update the `exchange-rates.php` configuration file to suit your needs.
@@ -29,7 +29,7 @@ Then, update the `exchange-rates.php` configuration file to suit your needs.
 To retrieve exchange rates, use the ExchangeRates facade:
 
 ```php
-use Brights\ExchangeRates\Contracts\ExchangeRateServiceInterface;
+use BC\ExchangeRates\Contracts\ExchangeRateServiceInterface;
 
 // get exchange rates of USD with all other currencies as a laravel collection
 $exchangeRates = $service->getExchangeRates('USD');

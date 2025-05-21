@@ -1,8 +1,8 @@
 <?php
 
-namespace Brights\ExchangeRates\Enums;
+namespace BC\ExchangeRates\Enums;
 
-use Brights\ExchangeRates\Traits\EnumHelpers;
+use BC\ExchangeRates\Traits\EnumHelpers;
 
 /**
  * ExchangeRateProvidersEnum

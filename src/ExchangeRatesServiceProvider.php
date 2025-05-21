@@ -1,8 +1,8 @@
 <?php
 
-namespace Brights\ExchangeRates;
+namespace BC\ExchangeRates;
 
-use Brights\ExchangeRates\Contracts\ExchangeRateServiceInterface;
+use BC\ExchangeRates\Contracts\ExchangeRateServiceInterface;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
 
@@ -36,7 +36,7 @@ class ExchangeRatesServiceProvider extends ServiceProvider
 
         // Register the command
         $this->commands([
-            \Brights\ExchangeRates\Console\Commands\MigrateExchangeRatesCommand::class,
+            \BC\ExchangeRates\Console\Commands\MigrateExchangeRatesCommand::class,
         ]);
     }
 }
