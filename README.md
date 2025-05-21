@@ -49,4 +49,4 @@ Kareem Mohamed - Bright Creations
 Email: [kareem.shaaban@brightcreations.com](mailto:kareem.shaaban@brightcreations.com)
 
 ## Version
-1.0.0
+0.0.0
