@@ -1,8 +1,8 @@
 <?php
 
-namespace BC\ExchangeRates\Contracts;
+namespace Brights\ExchangeRates\Contracts;
 
-use BC\ExchangeRates\Models\CurrencyExchangeRate;
+use Brights\ExchangeRates\Models\CurrencyExchangeRate;
 use Illuminate\Support\Collection;
 
 interface ExchangeRateServiceInterface

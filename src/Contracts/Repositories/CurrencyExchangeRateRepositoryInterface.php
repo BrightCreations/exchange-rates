@@ -1,9 +1,9 @@
 <?php
 
-namespace BC\ExchangeRates\Contracts\Repositories;
+namespace Brights\ExchangeRates\Contracts\Repositories;
 
-use BC\ExchangeRates\Models\CurrencyExchangeRate;
-use BC\ExchangeRates\Models\CurrencyExchangeRateHistory;
+use Brights\ExchangeRates\Models\CurrencyExchangeRate;
+use Brights\ExchangeRates\Models\CurrencyExchangeRateHistory;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;

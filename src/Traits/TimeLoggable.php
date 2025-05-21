@@ -1,6 +1,6 @@
 <?php
 
-namespace BC\ExchangeRates\Traits;
+namespace Brights\ExchangeRates\Traits;
 
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
@@ -20,11 +20,11 @@ trait TimeLoggable
         $result = $closure();
         $end = microtime(true);
         $time = $end - $start;
-        Log::debug("[BC\ExchangeRates] >>>>> Time: " . $time);
+        Log::debug("[Brights\ExchangeRates] >>>>> Time: " . $time);
         if ($result instanceof Response) {
-            Log::debug("[BC\ExchangeRates] >>>>> Response: " . json_encode($result->json()));
+            Log::debug("[Brights\ExchangeRates] >>>>> Response: " . json_encode($result->json()));
         } else {
-            Log::debug("[BC\ExchangeRates] >>>>> Closure Return: " . $result);
+            Log::debug("[Brights\ExchangeRates] >>>>> Closure Return: " . $result);
         }
         return $result;
     }

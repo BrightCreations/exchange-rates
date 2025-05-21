@@ -1,8 +1,8 @@
 <?php
 
-namespace BC\ExchangeRates\Contracts;
+namespace Brights\ExchangeRates\Contracts;
 
-use BC\ExchangeRates\Models\CurrencyExchangeRateHistory;
+use Brights\ExchangeRates\Models\CurrencyExchangeRateHistory;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
 

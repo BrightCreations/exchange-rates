@@ -1,6 +1,6 @@
 <?php
 
-namespace BC\ExchangeRates\Traits;
+namespace Brights\ExchangeRates\Traits;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Client\Response;

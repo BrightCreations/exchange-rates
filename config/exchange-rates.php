@@ -1,7 +1,7 @@
 <?php
 
-use BC\ExchangeRates\Concretes\ExchangeRateApiService;
-use BC\ExchangeRates\Enums\ExchangeRateProvidersEnum;
+use Brights\ExchangeRates\Concretes\ExchangeRateApiService;
+use Brights\ExchangeRates\Enums\ExchangeRateProvidersEnum;
 
 return [
 

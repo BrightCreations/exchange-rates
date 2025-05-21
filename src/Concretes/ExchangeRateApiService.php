@@ -1,15 +1,15 @@
 <?php
 
-namespace BC\ExchangeRates\Concretes;
+namespace Brights\ExchangeRates\Concretes;
 
-use BC\ExchangeRates\Contracts\BaseExchangeRateService;
-use BC\ExchangeRates\Contracts\ExchangeRateServiceInterface;
-use BC\ExchangeRates\Contracts\HistoricalSupportExchangeRateServiceInterface;
-use BC\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
-use BC\ExchangeRates\Models\CurrencyExchangeRate;
-use BC\ExchangeRates\Models\CurrencyExchangeRateHistory;
-use BC\ExchangeRates\Traits\CollectableResponse;
-use BC\ExchangeRates\Traits\TimeLoggable;
+use Brights\ExchangeRates\Contracts\BaseExchangeRateService;
+use Brights\ExchangeRates\Contracts\ExchangeRateServiceInterface;
+use Brights\ExchangeRates\Contracts\HistoricalSupportExchangeRateServiceInterface;
+use Brights\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
+use Brights\ExchangeRates\Models\CurrencyExchangeRate;
+use Brights\ExchangeRates\Models\CurrencyExchangeRateHistory;
+use Brights\ExchangeRates\Traits\CollectableResponse;
+use Brights\ExchangeRates\Traits\TimeLoggable;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
