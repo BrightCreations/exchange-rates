@@ -1,5 +1,10 @@
 # Exchange Rates Service Package
 
+![Downloads](https://img.shields.io/github/downloads/BrightCreations/exchange-rates/total)
+![License](https://img.shields.io/github/license/BrightCreations/exchange-rates)
+![Last Commit](https://img.shields.io/github/last-commit/BrightCreations/exchange-rates)
+![Stars](https://img.shields.io/github/stars/BrightCreations/exchange-rates?style=social)
+
 ## Overview
 The Exchange Rates Service package provides a simple and efficient way to retrieve and manage exchange rates in your application. This package allows you to easily integrate exchange rate data into your project, making it ideal for e-commerce, financial, and other applications that require currency conversions.
 
