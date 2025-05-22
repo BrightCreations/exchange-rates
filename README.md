@@ -21,6 +21,13 @@ To install the Exchange Rates Service package, run the following command in your
 composer require brightcreations/exchange-rates
 ```
 
+## Migrations
+You can run the package migrations using the following command:
+
+```bash
+php artisan exchange-rates:migrate
+```
+
 ## Configuration
 To configure the package, publish the configuration file using the following command:
 
@@ -28,16 +35,63 @@ To configure the package, publish the configuration file using the following com
 php artisan vendor:publish --provider="BrightCreations\ExchangeRates\ExchangeRatesServiceProvider"
 ```
 
+Next, execute the migrations (if they haven't been executed yet):
+
+```bash
+php artisan migrate
+```
+
 Then, update the `exchange-rates.php` configuration file to suit your needs.
 
 ## Usage
-To retrieve exchange rates, use the ExchangeRates facade:
+To retrieve exchange rates, use the `ExchangeRateServiceInterface`:
 
 ```php
 use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
 
 // get exchange rates of USD with all other currencies as a laravel collection
 $exchangeRates = $service->getExchangeRates('USD');
+```
+
+You can inject the service into a constructor or resolve it using the `resolve` or `app->make` method. Here are examples of each approach:
+
+### Constructor Injection
+
+```php
+use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
+
+class SomeClass {
+    private $exchangeRateService;
+
+    public function __construct(ExchangeRateServiceInterface $exchangeRateService) {
+        $this->exchangeRateService = $exchangeRateService;
+    }
+
+    public function someMethod() {
+        $exchangeRates = $this->exchangeRateService->getExchangeRates('USD');
+        // Use $exchangeRates...
+    }
+}
+```
+
+### Using `resolve` Method
+
+```php
+use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
+
+$exchangeRateService = resolve(ExchangeRateServiceInterface::class);
+$exchangeRates = $exchangeRateService->getExchangeRates('USD');
+// Use $exchangeRates...
+```
+
+### Using `app->make` Method
+
+```php
+use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
+
+$exchangeRateService = app()->make(ExchangeRateServiceInterface::class);
+$exchangeRates = $exchangeRateService->getExchangeRates('USD');
+// Use $exchangeRates...
 ```
 
 ## API Documentation
