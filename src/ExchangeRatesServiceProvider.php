@@ -2,7 +2,9 @@
 
 namespace BrightCreations\ExchangeRates;
 
+use BrightCreations\ExchangeRates\Concretes\Repositories\CurrencyExchangeRateRepository;
 use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
+use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\ServiceProvider;
 
@@ -32,6 +34,7 @@ class ExchangeRatesServiceProvider extends ServiceProvider
         );
 
         // Register the service
+        $this->app->singleton(CurrencyExchangeRateRepositoryInterface::class, CurrencyExchangeRateRepository::class);
         $this->app->singleton(ExchangeRateServiceInterface::class, fn() => $this->app->make(Config::get('exchange-rates.default_service')));
 
         // Register the command
