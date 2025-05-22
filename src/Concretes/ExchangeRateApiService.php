@@ -13,9 +13,9 @@ use BrightCreations\ExchangeRates\Traits\TimeLoggable;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\Client\Factory as HttpClient;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Http;
 
 class ExchangeRateApiService extends BaseExchangeRateService implements ExchangeRateServiceInterface, HistoricalSupportExchangeRateServiceInterface
 {
@@ -23,7 +23,7 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
         TimeLoggable;
 
     public function __construct(
-        private Http $http,
+        private HttpClient $http,
         private CurrencyExchangeRateRepositoryInterface $currencyExchangeRateRepository,
     ) {
         $this->http->baseUrl(Config::get('exchange-rates.services.exchange_rate_api.base_url'))
