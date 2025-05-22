@@ -32,7 +32,7 @@ class ExchangeRatesServiceProvider extends ServiceProvider
         );
 
         // Register the service
-        $this->app->bind(ExchangeRateServiceInterface::class, fn() => $this->app->make(Config::get('exchange-rates.default_service')));
+        $this->app->singleton(ExchangeRateServiceInterface::class, fn() => $this->app->make(Config::get('exchange-rates.default_service')));
 
         // Register the command
         $this->commands([
