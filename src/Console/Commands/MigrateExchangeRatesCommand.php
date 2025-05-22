@@ -1,6 +1,6 @@
 <?php
 
-namespace Brights\ExchangeRates\Console\Commands;
+namespace BrightCreations\ExchangeRates\Console\Commands;
 
 use Illuminate\Console\Command;
 
@@ -28,7 +28,7 @@ class MigrateExchangeRatesCommand extends Command
     public function handle(): int
     {
         $this->call('migrate', [
-            '--path' => 'vendor/brights/exchange-rates/Database/Migrations',
+            '--path' => 'vendor/brightcreations/exchange-rates/Database/Migrations',
             '--realpath' => true,
         ]);
 

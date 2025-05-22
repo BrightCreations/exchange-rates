@@ -1,7 +1,7 @@
 <?php
 
-use Brights\ExchangeRates\Concretes\ExchangeRateApiService;
-use Brights\ExchangeRates\Enums\ExchangeRateProvidersEnum;
+use BrightCreations\ExchangeRates\Concretes\ExchangeRateApiService;
+use BrightCreations\ExchangeRates\Enums\ExchangeRateProvidersEnum;
 
 return [
 

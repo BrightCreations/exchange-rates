@@ -1,6 +1,6 @@
 <?php
 
-namespace Brights\ExchangeRates\Models;
+namespace BrightCreations\ExchangeRates\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
