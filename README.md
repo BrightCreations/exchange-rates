@@ -28,7 +28,7 @@ You can run the package migrations using the following command:
 php artisan exchange-rates:migrate
 ```
 
-## Configuration
+## Configuration (Optional)
 To configure the package, publish the configuration file using the following command:
 
 ```bash
