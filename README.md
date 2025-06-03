@@ -108,4 +108,4 @@ Kareem Mohamed - Bright Creations
 Email: [kareem.shaaban@brightcreations.com](mailto:kareem.shaaban@brightcreations.com)
 
 ## Version
-v0.1.0
+0.1.1
