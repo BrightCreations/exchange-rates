@@ -97,9 +97,10 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
      */
     public function storeHistoricalExchangeRates(string $currency_code, CarbonInterface $date_time): Collection
     {
-        $year = $date_time->year;
-        $month = $date_time->month;
-        $day = $date_time->day;
+        $year = $date_time->format('Y');
+        $month = $date_time->format('m');
+        $day = $date_time->format('d');
+        logger("year: $year, month: $month, day: $day");
         $response = $this->logTime(function () use ($currency_code, $year, $month, $day) {
             return $this->collectResponse($this->http->get("/historical/$year-$month-$day.json?base=$currency_code"));
         });
