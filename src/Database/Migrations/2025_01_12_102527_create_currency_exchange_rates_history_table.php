@@ -12,20 +12,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('currency_exchange_rates_history', function (Blueprint $table) {
-            $table->id();
-            $table->string('base_currency_code', 3);
-            $table->string('target_currency_code', 3);
-            $table->string('exchange_rate', 20);
-            $table->dateTime('date_time');
-            $table->timestamp('last_update_date')->default(Carbon::now());
-
-            $table->unique([
-                'base_currency_code',
-                'target_currency_code',
-                'date_time',
-            ], 'currency_exchange_rates_history_unique');
-        });
+        if (! Schema::hasTable('currency_exchange_rates_history')) {
+            Schema::create('currency_exchange_rates_history', function (Blueprint $table) {
+                $table->id();
+                $table->string('base_currency_code', 3);
+                $table->string('target_currency_code', 3);
+                $table->string('exchange_rate', 20);
+                $table->dateTime('date_time');
+                $table->timestamp('last_update_date')->default(Carbon::now());
+    
+                $table->unique([
+                    'base_currency_code',
+                    'target_currency_code',
+                    'date_time',
+                ], 'currency_exchange_rates_history_unique');
+            });
+        }
     }
 
     /**
