@@ -20,6 +20,11 @@
             "BrightCreations\\ExchangeRates\\": "src/"
         }
     },
+    "autoload-dev": {
+        "psr-4": {
+            "BrightCreations\\ExchangeRates\\Tests\\": "tests/"
+        }
+    },
     "extra": {
         "laravel": {
             "providers": [
@@ -33,5 +38,19 @@
         "illuminate/database": "^10.0 || ^11.0 || ^12.0",
         "illuminate/http": "^10.0 || ^11.0 || ^12.0",
         "illuminate/console": "^10.0 || ^11.0 || ^12.0"
+    },
+    "require-dev": {
+        "pestphp/pest": "^2.36",
+        "pestphp/pest-plugin-laravel": "^2.4",
+        "orchestra/testbench": "^9.14",
+        "vlucas/phpdotenv": "^5.6"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "test": "./vendor/bin/pest"
     }
 }
