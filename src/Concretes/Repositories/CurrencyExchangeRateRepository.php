@@ -35,7 +35,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     {
         $dataToInsert = [];
         foreach ($exchange_rates as $exchange_rate) {
-            if (! $exchange_rate instanceof \BrightCreations\ExchangeRates\Dtos\ExchangeRatesDto) {
+            if (! ($exchange_rate instanceof \BrightCreations\ExchangeRates\Dtos\ExchangeRatesDto)) {
                 throw new \InvalidArgumentException('Exchange rate must be an instance of \BrightCreations\ExchangeRates\Dtos\ExchangeRatesDto');
             }
             foreach ($exchange_rate->getExchangeRates() as $code => $rate) {
@@ -86,7 +86,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     {
         $dataToInsert = [];
         foreach ($historical_exchange_rates as $historical_exchange_rate) {
-            if (! $historical_exchange_rate instanceof \BrightCreations\ExchangeRates\Dtos\HistoricalExchangeRatesDto) {
+            if (! ($historical_exchange_rate instanceof \BrightCreations\ExchangeRates\Dtos\HistoricalExchangeRatesDto)) {
                 throw new \InvalidArgumentException('Historical exchange rate must be an instance of \BrightCreations\ExchangeRates\Dtos\HistoricalExchangeRatesDto');
             }
             foreach ($historical_exchange_rate->getExchangeRates() as $code => $rate) {
