@@ -1,5 +1,7 @@
 # Exchange Rates Library
 
+[![Tests](https://github.com/brightcreations/exchange-rates/actions/workflows/php.yml/badge.svg)](https://github.com/brightcreations/exchange-rates/actions)  
+
 A comprehensive Laravel package for fetching, storing, and managing exchange rates from various external APIs. This library provides a clean, extensible architecture for handling currency exchange rates with support for both current and historical data.
 
 ## 🚀 Features
@@ -72,18 +74,14 @@ This library follows a clean, layered architecture:
 ### Basic Usage
 
 ```php
-use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
+use BrightCreations\ExchangeRates\Facades\ExchangeRate;
 
 class CurrencyController extends Controller
 {
-    public function __construct(
-        private ExchangeRateServiceInterface $exchangeRateService
-    ) {}
-
     public function getRates(string $currency = 'USD')
     {
         // Store and retrieve current exchange rates
-        $rates = $this->exchangeRateService->storeExchangeRates($currency);
+        $rates = ExchangeRate::storeExchangeRates($currency);
         
         return response()->json($rates);
     }
@@ -93,7 +91,7 @@ class CurrencyController extends Controller
 ### Historical Data
 
 ```php
-use BrightCreations\ExchangeRates\Contracts\HistoricalSupportExchangeRateServiceInterface;
+use BrightCreations\ExchangeRates\Facades\HistoricalExchangeRate;
 use Carbon\Carbon;
 
 class HistoricalController extends Controller
@@ -102,12 +100,28 @@ class HistoricalController extends Controller
     {
         $dateTime = Carbon::parse($date);
         
-        $rates = $this->exchangeRateService->getHistoricalExchangeRates($currency, $dateTime);
+        $rates = HistoricalExchangeRate::getHistoricalExchangeRates($currency, $dateTime);
         
         return response()->json($rates);
     }
 }
 ```
+
+### Repository Usage
+
+```php
+use BrightCreations\ExchangeRates\Facades\ExchangeRateRepository;
+
+$repository = ExchangeRateRepository::getExchangeRate('USD', 'EUR');
+```
+
+> **Note:** You can also use Laravel's `resolve()` or `app()` helpers to access the services directly:
+>
+> ```php
+> $service = resolve(ExchangeRateServiceInterface::class);
+> $service = app(ExchangeRateServiceInterface::class);
+> ```
+> The facades are the recommended and most convenient way for most use cases.
 
 ## 🔌 Supported APIs
 
