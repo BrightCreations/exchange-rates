@@ -4,6 +4,7 @@
 ![License](https://img.shields.io/github/license/BrightCreations/exchange-rates)
 ![Last Commit](https://img.shields.io/github/last-commit/BrightCreations/exchange-rates)
 ![Stars](https://img.shields.io/github/stars/BrightCreations/exchange-rates?style=social)
+![Tests](https://img.shields.io/github/actions/workflow/status/BrightCreations/exchange-rates/tests.yml?label=tests)
 
 ## Overview
 The Exchange Rates Service package provides a robust and flexible way to retrieve and manage exchange rates in your Laravel application. This package implements a clean architecture with contracts, DTOs, and multiple service providers, making it ideal for e-commerce, financial, and other applications that require currency conversions.
