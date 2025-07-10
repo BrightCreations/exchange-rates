@@ -35,6 +35,9 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     {
         $dataToInsert = [];
         foreach ($exchange_rates as $exchange_rate) {
+            if (! $exchange_rate instanceof \BrightCreations\ExchangeRates\Dtos\ExchangeRatesDto) {
+                throw new \InvalidArgumentException('Exchange rate must be an instance of \BrightCreations\ExchangeRates\Dtos\ExchangeRatesDto');
+            }
             foreach ($exchange_rate->getExchangeRates() as $code => $rate) {
                 $dataToInsert[] = [
                     'base_currency_code' => $exchange_rate->getBaseCurrencyCode(),
@@ -83,6 +86,9 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     {
         $dataToInsert = [];
         foreach ($historical_exchange_rates as $historical_exchange_rate) {
+            if (! $historical_exchange_rate instanceof \BrightCreations\ExchangeRates\Dtos\HistoricalExchangeRatesDto) {
+                throw new \InvalidArgumentException('Historical exchange rate must be an instance of \BrightCreations\ExchangeRates\Dtos\HistoricalExchangeRatesDto');
+            }
             foreach ($historical_exchange_rate->getExchangeRates() as $code => $rate) {
                 $dataToInsert[] = [
                     'base_currency_code' => $historical_exchange_rate->getBaseCurrencyCode(),
@@ -133,8 +139,13 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
         $currencies_pairs_strings = array_map(fn($currencies_pair) => (string) $currencies_pair, $currencies_pairs);
         $currencies_pairs_strings_unique = array_unique($currencies_pairs_strings);
 
-        return CurrencyExchangeRate::select('*', DB::raw("CONCAT(base_currency_code, '_', target_currency_code) as currencies_pair"))
-            ->whereIn(DB::raw("CONCAT(base_currency_code, '_', target_currency_code)"), $currencies_pairs_strings_unique)
+        $currenciesPairRaw = DB::raw(
+            app('db')->connection()->getDriverName() === 'sqlite'
+                ? "(base_currency_code || '_' || target_currency_code) as currencies_pair"
+                : "CONCAT(base_currency_code, '_', target_currency_code) as currencies_pair"
+        );
+        return CurrencyExchangeRate::select('*', $currenciesPairRaw)
+            ->whereIn('currencies_pair', $currencies_pairs_strings_unique)
             ->get()
             ->groupBy('currencies_pair');
     }
@@ -150,12 +161,17 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
         $historical_base_currencies_strings = array_map(fn($historical_base_currency) => (string) $historical_base_currency, $historical_base_currencies);
         $historical_base_currencies_strings_unique = array_unique($historical_base_currencies_strings);
 
+        $historicalBaseCurrencyRaw = DB::raw(
+            app('db')->connection()->getDriverName() === 'sqlite'
+                ? "(base_currency_code || '_' || strftime('%Y-%m-%d', date_time)) as historical_base_currency"
+                : "CONCAT(base_currency_code, '_', DATE_FORMAT(date_time, '%Y-%m-%d')) as historical_base_currency"
+        );
         return CurrencyExchangeRateHistory::select(
             '*',
-            DB::raw("CONCAT(base_currency_code, '_', DATE_FORMAT(date_time, '%Y-%m-%d')) as historical_base_currency")
+            $historicalBaseCurrencyRaw
         )
             ->whereIn(
-                DB::raw("CONCAT(base_currency_code, '_', DATE_FORMAT(date_time, '%Y-%m-%d'))"),
+                'historical_base_currency',
                 $historical_base_currencies_strings_unique
             )
             ->get()
@@ -173,8 +189,13 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
         $historical_currencies_pairs_strings = array_map(fn($historical_currencies_pair) => (string) $historical_currencies_pair, $historical_currencies_pairs);
         $historical_currencies_pairs_strings_unique = array_unique($historical_currencies_pairs_strings);
 
-        return CurrencyExchangeRateHistory::select('*', DB::raw("CONCAT(base_currency_code, '_', target_currency_code, '_', DATE_FORMAT(date_time, '%Y-%m-%d')) as historical_currencies_pair"))
-            ->whereIn(DB::raw("CONCAT(base_currency_code, '_', target_currency_code, '_', DATE_FORMAT(date_time, '%Y-%m-%d'))"), $historical_currencies_pairs_strings_unique)
+        $historicalCurrenciesPairRaw = DB::raw(
+            app('db')->connection()->getDriverName() === 'sqlite'
+                ? "(base_currency_code || '_' || target_currency_code || '_' || strftime('%Y-%m-%d', date_time)) as historical_currencies_pair"
+                : "CONCAT(base_currency_code, '_', target_currency_code, '_', DATE_FORMAT(date_time, '%Y-%m-%d')) as historical_currencies_pair"
+        );
+        return CurrencyExchangeRateHistory::select('*', $historicalCurrenciesPairRaw)
+            ->whereIn('historical_currencies_pair', $historical_currencies_pairs_strings_unique)
             ->get()
             ->groupBy('historical_currencies_pair');
     }
