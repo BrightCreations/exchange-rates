@@ -1,6 +1,10 @@
 # Exchange Rates Library
 
-[![Tests](https://github.com/brightcreations/exchange-rates/actions/workflows/php.yml/badge.svg)](https://github.com/brightcreations/exchange-rates/actions)  
+![Downloads](https://img.shields.io/github/downloads/BrightCreations/exchange-rates/total)
+![License](https://img.shields.io/github/license/BrightCreations/exchange-rates)
+![Last Commit](https://img.shields.io/github/last-commit/BrightCreations/exchange-rates)
+![Stars](https://img.shields.io/github/stars/BrightCreations/exchange-rates?style=social)
+![Tests](https://img.shields.io/github/actions/workflow/status/BrightCreations/exchange-rates/tests.yml?label=tests)
 
 A comprehensive Laravel package for fetching, storing, and managing exchange rates from various external APIs. This library provides a clean, extensible architecture for handling currency exchange rates with support for both current and historical data.
 
