@@ -2,7 +2,10 @@
 
 namespace BrightCreations\ExchangeRates\Models;
 
+use BrightCreations\ExchangeRates\DTOs\ExchangeRatesDto;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class CurrencyExchangeRate extends Model
 {
@@ -58,6 +61,28 @@ class CurrencyExchangeRate extends Model
     | STATIC FUNCTIONS
     |--------------------------------------------------------------------------
     */
+    /**
+     * Construct a CurrencyExchangeRate model from an ExchangeRatesDto
+     * 
+     * @param ExchangeRatesDto $dto
+     * 
+     * @return Collection<CurrencyExchangeRate>
+     */
+    public static function constructFromExchangeRatesDto(ExchangeRatesDto $dto): Collection
+    {
+        $data = collect();
+        $base_code = $dto->getBaseCurrencyCode();
+        $now = Carbon::now();
+        foreach ($dto->getExchangeRates() as $code => $rate) {
+            $data->push(new CurrencyExchangeRate([
+                'base_currency_code'    => $base_code,
+                'target_currency_code'  => $code,
+                'exchange_rate'         => $rate,
+                'last_update_date'      => $now,
+            ]));
+        }
+        return $data;
+    }
 
     /*
     |--------------------------------------------------------------------------

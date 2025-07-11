@@ -2,14 +2,10 @@
 
 namespace Tests\Unit;
 
-use BrightCreations\ExchangeRates\Concretes\Repositories\CurrencyExchangeRateRepository;
 use BrightCreations\ExchangeRates\DTOs\ExchangeRatesDto;
 use BrightCreations\ExchangeRates\DTOs\HistoricalExchangeRatesDto;
 use BrightCreations\ExchangeRates\DTOs\HistoricalBaseCurrencyDto;
-use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 beforeEach(function () {
     // Setup repository for each test

@@ -6,6 +6,9 @@ use BrightCreations\ExchangeRates\Contracts\BaseExchangeRateService;
 use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
 use BrightCreations\ExchangeRates\Contracts\HistoricalSupportExchangeRateServiceInterface;
 use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
+use BrightCreations\ExchangeRates\DTOs\ExchangeRatesDto;
+use BrightCreations\ExchangeRates\DTOs\HistoricalBaseCurrencyDto;
+use BrightCreations\ExchangeRates\DTOs\HistoricalExchangeRatesDto;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRateHistory;
 use BrightCreations\ExchangeRates\Traits\CollectableResponse;
@@ -17,6 +20,50 @@ use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 
+/**
+ * ExchangeRateApiService is a service that provides exchange rate data from the Exchange Rate API.
+ * 
+ * @package BrightCreations\ExchangeRates\Concretes
+ * @author Bright Creations <kareem.shaaban@brightcreations.com>
+ * @license MIT
+ * 
+ * Example response for `GET https://v6.exchangerate-api.com/v6/YOUR-API-KEY/history/USD/YEAR/MONTH/DAY` endpoint:
+ * ```json
+{
+    "result":"success",
+    "documentation":"https://www.exchangerate-api.com/docs",
+    "terms_of_use":"https://www.exchangerate-api.com/terms",
+    "year":2015,
+    "month":2,
+    "day":22,
+    "base_code":"USD",
+    "conversion_rates":{
+        "AUD":1.4196,
+        "BRL":4.0003,
+        ....
+    }
+}
+ * ```
+ * 
+ * Example response for `GET https://v6.exchangerate-api.com/v6/YOUR-API-KEY/latest/USD` endpoint:
+ * ```json
+{
+	"result": "success",
+	"documentation": "https://www.exchangerate-api.com/docs",
+	"terms_of_use": "https://www.exchangerate-api.com/terms",
+	"time_last_update_unix": 1585267200,
+	"time_last_update_utc": "Fri, 27 Mar 2020 00:00:00 +0000",
+	"time_next_update_unix": 1585353700,
+	"time_next_update_utc": "Sat, 28 Mar 2020 00:00:00 +0000",
+	"base_code": "USD",
+	"conversion_rates": {
+		"USD": 1,
+		"AUD": 1.4817,
+        ....
+	}
+}
+ * ```
+ */
 class ExchangeRateApiService extends BaseExchangeRateService implements ExchangeRateServiceInterface, HistoricalSupportExchangeRateServiceInterface
 {
     use CollectableResponse,
@@ -29,7 +76,8 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
         $this->http->baseUrl(Config::get('exchange-rates.services.exchange_rate_api.base_url'))
             ->withHeaders([
                 'Accept' => 'application/json'
-            ]);
+            ])
+            ->throw();
     }
 
     /**
@@ -41,7 +89,12 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
      */
     public function storeExchangeRates(string $currency_code): Collection
     {
-        $response = $this->collectResponse($this->http->get("/latest/$currency_code"));
+        // Get response from the API
+        $response = $this->logTime(function () use ($currency_code) {
+            return $this->collectResponse($this->http->get("/latest/$currency_code"));
+        });
+
+        // Update the database
         $this->currencyExchangeRateRepository->updateExchangeRates(
             $response->get('base_code'),
             $response->get('conversion_rates'),
@@ -51,17 +104,62 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
             $response->get('conversion_rates'),
             Carbon::createFromTimestamp($response->get('time_last_update_unix')),
         );
-        $data = collect();
-        foreach ($response->get('conversion_rates') as $code => $rate) {
-            $record = new CurrencyExchangeRate([
-                'base_currency_code'    => $currency_code,
-                'target_currency_code'  => $code,
-                'exchange_rate'         => $rate,
-                'last_update_date'      => Carbon::now(),
-            ]);
-            $data->push($record);
+
+        // Construct models
+        return CurrencyExchangeRate::constructFromExchangeRatesDto(
+            new ExchangeRatesDto(
+                $response->get('base_code'),
+                $response->get('conversion_rates'),
+            )
+        );
+    }
+
+    /**
+     * Store exchange rates for multiple currencies
+     *
+     * @param array $currencies_codes
+     * 
+     * @return Collection<CurrencyExchangeRate>
+     */
+    public function storeBulkExchangeRatesForMultipleCurrencies(array $currencies_codes): Collection
+    {
+        // Get responses from the API
+        $responses = $this->logTime(function () use ($currencies_codes) {
+            $responses = collect();
+            foreach ($currencies_codes as $currency_code) {
+                $response = $this->logTime(function () use ($currency_code) {
+                    return $this->collectResponse($this->http->get("/latest/$currency_code"));
+                });
+                $responses->push($response);
+            }
+            return $responses;
+        });
+
+        // Construct DTOs
+        $dtos = [];
+        $historical_dtos = [];
+        foreach ($responses as $response) {
+            $dtos[] = new ExchangeRatesDto(
+                $response->get('base_code'),
+                $response->get('conversion_rates'),
+            );
+            $historical_dtos[] = new HistoricalExchangeRatesDto(
+                $response->get('base_code'),
+                $response->get('conversion_rates'),
+                Carbon::createFromTimestamp($response->get('time_last_update_unix')),
+            );
         }
-        return $data;
+
+        // Update the database
+        $this->currencyExchangeRateRepository->updateBulkExchangeRates($dtos);
+        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historical_dtos);
+
+        // Construct models
+        $data = collect();
+        foreach ($dtos as $dto) {
+            $data->push(CurrencyExchangeRate::constructFromExchangeRatesDto($dto));
+        }
+        return $data->flatten()->groupBy('base_currency_code');
     }
 
     /**
@@ -96,29 +194,77 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
      */
     public function storeHistoricalExchangeRates(string $currency_code, CarbonInterface $date_time): Collection
     {
+        // Get response from the API
         $year = $date_time->year;
         $month = $date_time->month;
         $day = $date_time->day;
         $response = $this->logTime(function () use ($currency_code, $year, $month, $day) {
             return $this->collectResponse($this->http->get("/history/$currency_code/$year/$month/$day"));
         });
+
+        // Update the database
         $this->currencyExchangeRateRepository->updateExchangeRatesHistory(
             $response->get('base_code'),
             $response->get('conversion_rates'),
             $date_time,
         );
-        $data = collect();
-        foreach ($response->get('conversion_rates') as $code => $rate) {
-            $record = new CurrencyExchangeRateHistory([
-                'base_currency_code'    => $currency_code,
-                'target_currency_code'  => $code,
-                'exchange_rate'         => $rate,
-                'date_time'             => $date_time,
-                'last_update_date'      => Carbon::now(),
-            ]);
-            $data->push($record);
+
+        // Construct models
+        return CurrencyExchangeRateHistory::constructFromHistoricalExchangeRatesDto(
+            new HistoricalExchangeRatesDto(
+                $response->get('base_code'),
+                $response->get('conversion_rates'),
+                $date_time,
+            )
+        );
+    }
+
+    /**
+     * Store historical exchange rates for multiple currencies
+     *
+     * @param HistoricalBaseCurrencyDto[] $historical_base_currencies
+     * 
+     * @return Collection<CurrencyExchangeRateHistory>
+     */
+    public function storeBulkHistoricalExchangeRatesForMultipleCurrencies(array $historical_base_currencies): Collection
+    {
+        // Get responses from the API
+        $responses = $this->logTime(function () use ($historical_base_currencies) {
+            $responses = collect();
+            foreach ($historical_base_currencies as $historical_base_currency) {
+                $response = $this->logTime(function () use ($historical_base_currency) {
+                    $base_currency_code = $historical_base_currency->getBaseCurrencyCode();
+                    $date_time = $historical_base_currency->getDateTime();
+                    $year = $date_time->year;
+                    $month = $date_time->month;
+                    $day = $date_time->day;
+                    return $this->collectResponse($this->http->get("/history/$base_currency_code/$year/$month/$day"));
+                });
+                $responses->push($response);
+            }
+            return $responses;
+        });
+
+        // Construct DTOs
+        $historical_dtos = [];
+        foreach ($responses as $response) {
+            $date_time = Carbon::create($response->get('year'), $response->get('month'), $response->get('day'));
+            $historical_dtos[] = new HistoricalExchangeRatesDto(
+                $response->get('base_code'),
+                $response->get('conversion_rates'),
+                $date_time,
+            );
         }
-        return $data;
+
+        // Update the database
+        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historical_dtos);
+
+        // Construct models
+        $data = collect();
+        foreach ($historical_dtos as $dto) {
+            $data->push(CurrencyExchangeRateHistory::constructFromHistoricalExchangeRatesDto($dto));
+        }
+        return $data->flatten()->groupBy(['base_currency_code', fn ($item) => $item->date_time->format('Y-m-d')]);
     }
 
     /**

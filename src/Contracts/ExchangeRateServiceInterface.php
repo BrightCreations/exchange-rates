@@ -25,6 +25,15 @@ interface ExchangeRateServiceInterface
     public function storeExchangeRates(string $currency_code): Collection;
 
     /**
+     * Store exchange rates for multiple currencies
+     *
+     * @param array $currencies_codes
+     * 
+     * @return Collection<CurrencyExchangeRate>
+     */
+    public function storeBulkExchangeRatesForMultipleCurrencies(array $currencies_codes): Collection;
+
+    /**
      * Get exchange rates from the database
      *
      * @param string $currency_code

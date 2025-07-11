@@ -2,6 +2,7 @@
 
 namespace BrightCreations\ExchangeRates\Contracts;
 
+use BrightCreations\ExchangeRates\DTOs\HistoricalBaseCurrencyDto;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRateHistory;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Collection;
@@ -17,6 +18,15 @@ interface HistoricalSupportExchangeRateServiceInterface
      * @return Collection<CurrencyExchangeRateHistory>
      */
     public function storeHistoricalExchangeRates(string $currency_code, CarbonInterface $date_time): Collection;
+
+    /**
+     * Store historical exchange rates for multiple currencies
+     *
+     * @param HistoricalBaseCurrencyDto[] $historical_base_currencies
+     * 
+     * @return Collection<CurrencyExchangeRateHistory>
+     */
+    public function storeBulkHistoricalExchangeRatesForMultipleCurrencies(array $historical_base_currencies): Collection;
 
     /**
      * Get historical exchange rates from the database

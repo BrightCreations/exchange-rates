@@ -1,0 +1,23 @@
+{
+	"result":"success",
+	"documentation":"https://www.exchangerate-api.com/docs",
+	"terms_of_use":"https://www.exchangerate-api.com/terms",
+	"year":2015,
+	"month":2,
+	"day":22,
+	"base_code":"USD",
+	"conversion_rates":{
+		"AUD":1.4196,
+		"BRL":4.0003,
+		"CAD":1.324,
+		"CHF":0.9744,
+		"CNY":6.3559,
+		"DKK":6.6601,
+		"EUR":0.8929,
+		"GBP":0.6595,
+		"HKD":7.75,
+		"INR":65.57,
+		"JPY":119.58,
+		"KRW":118
+	}
+}
