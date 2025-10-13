@@ -23,7 +23,9 @@ class CurrencyExchangeRate extends Model
     ];
 
     public $table = 'currency_exchange_rates';
+
     public static $tablename = 'currency_exchange_rates';
+
     public $timestamps = false;
 
     /*
@@ -63,9 +65,8 @@ class CurrencyExchangeRate extends Model
     */
     /**
      * Construct a CurrencyExchangeRate model from an ExchangeRatesDto
-     * 
-     * @param ExchangeRatesDto $dto
-     * 
+     *
+     *
      * @return Collection<CurrencyExchangeRate>
      */
     public static function constructFromExchangeRatesDto(ExchangeRatesDto $dto): Collection
@@ -75,12 +76,13 @@ class CurrencyExchangeRate extends Model
         $now = Carbon::now();
         foreach ($dto->getExchangeRates() as $code => $rate) {
             $data->push(new CurrencyExchangeRate([
-                'base_currency_code'    => $base_code,
-                'target_currency_code'  => $code,
-                'exchange_rate'         => $rate,
-                'last_update_date'      => $now,
+                'base_currency_code' => $base_code,
+                'target_currency_code' => $code,
+                'exchange_rate' => $rate,
+                'last_update_date' => $now,
             ]));
         }
+
         return $data;
     }
 

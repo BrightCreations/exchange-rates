@@ -3,8 +3,8 @@
 namespace Tests\Unit;
 
 use BrightCreations\ExchangeRates\DTOs\ExchangeRatesDto;
-use BrightCreations\ExchangeRates\DTOs\HistoricalExchangeRatesDto;
 use BrightCreations\ExchangeRates\DTOs\HistoricalBaseCurrencyDto;
+use BrightCreations\ExchangeRates\DTOs\HistoricalExchangeRatesDto;
 use Carbon\Carbon;
 
 beforeEach(function () {
@@ -12,8 +12,8 @@ beforeEach(function () {
     $this->repository = app(\BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface::class);
 });
 
-describe("Update and retrieve exchange rates", function () {
-    it("can update exchange rates", function () {
+describe('Update and retrieve exchange rates', function () {
+    it('can update exchange rates', function () {
         // Arrange
         $baseCurrencyCode = 'USD';
         $exchangeRates = [
@@ -43,7 +43,7 @@ describe("Update and retrieve exchange rates", function () {
         ]);
     });
 
-    it("can retrieve exchange rates", function () {
+    it('can retrieve exchange rates', function () {
         // Arrange
         $baseCurrencyCode = 'USD';
         $exchangeRates = [
@@ -62,7 +62,7 @@ describe("Update and retrieve exchange rates", function () {
     });
 });
 
-describe("Update and retrieve bulk exchange rates", function () {
+describe('Update and retrieve bulk exchange rates', function () {
     // Arrange
     $dataToBeStored = [
         [
@@ -82,7 +82,7 @@ describe("Update and retrieve bulk exchange rates", function () {
             ],
         ],
     ];
-    it("can update bulk exchange rates", function () use ($dataToBeStored) {
+    it('can update bulk exchange rates', function () use ($dataToBeStored) {
         // Act
         $this->expectException(\InvalidArgumentException::class);
         $this->repository->updateBulkExchangeRates($dataToBeStored);
@@ -126,7 +126,7 @@ describe("Update and retrieve bulk exchange rates", function () {
         ]);
     });
 
-    it("can retrieve bulk exchange rates", function () use ($dataToBeStored) {
+    it('can retrieve bulk exchange rates', function () use ($dataToBeStored) {
         // Arrange
         $dtos = [];
         foreach ($dataToBeStored as &$data) {
@@ -144,8 +144,8 @@ describe("Update and retrieve bulk exchange rates", function () {
     });
 });
 
-describe("Update and retrieve historical exchange rates", function () {
-    it("can update historical exchange rates", function () {
+describe('Update and retrieve historical exchange rates', function () {
+    it('can update historical exchange rates', function () {
         // Arrange
         $baseCurrencyCode = 'USD';
         $exchangeRates = [
@@ -179,7 +179,7 @@ describe("Update and retrieve historical exchange rates", function () {
         ]);
     });
 
-    it("can retrieve historical exchange rates", function () {
+    it('can retrieve historical exchange rates', function () {
         // Arrange
         $baseCurrencyCode = 'USD';
         $exchangeRates = [
@@ -199,7 +199,7 @@ describe("Update and retrieve historical exchange rates", function () {
     });
 });
 
-describe("Update and retrieve bulk historical exchange rates", function () {
+describe('Update and retrieve bulk historical exchange rates', function () {
     // Arrange
     $dataToBeStored = [
         [
@@ -221,8 +221,8 @@ describe("Update and retrieve bulk historical exchange rates", function () {
             'date_time' => Carbon::parse('2024-01-16 14:45:00'),
         ],
     ];
-    
-    it("can update bulk historical exchange rates", function () use ($dataToBeStored) {
+
+    it('can update bulk historical exchange rates', function () use ($dataToBeStored) {
         // Act
         $this->expectException(\InvalidArgumentException::class);
         $this->repository->updateBulkExchangeRatesHistory($dataToBeStored);
@@ -272,7 +272,7 @@ describe("Update and retrieve bulk historical exchange rates", function () {
         ]);
     });
 
-    it("can retrieve bulk historical exchange rates", function () use ($dataToBeStored) {
+    it('can retrieve bulk historical exchange rates', function () use ($dataToBeStored) {
         // Arrange
         $dtos = [];
         foreach ($dataToBeStored as &$data) {
@@ -294,8 +294,8 @@ describe("Update and retrieve bulk historical exchange rates", function () {
     });
 });
 
-describe("Retrieve single exchange rate for a pair and bulk exchange rates for multiple pairs", function () {
-    it("can retrieve a single exchange rate", function () {
+describe('Retrieve single exchange rate for a pair and bulk exchange rates for multiple pairs', function () {
+    it('can retrieve a single exchange rate', function () {
         // Arrange
         $baseCurrency = 'USD';
         $exchangeRates = [
@@ -313,7 +313,7 @@ describe("Retrieve single exchange rate for a pair and bulk exchange rates for m
         $this->assertEquals(0.85, $result->exchange_rate);
     });
 
-    it("can retrieve bulk exchange rates by currencies pair", function () {
+    it('can retrieve bulk exchange rates by currencies pair', function () {
         // Arrange
         $this->repository->updateExchangeRates('USD', [
             'EUR' => 0.85,
@@ -343,8 +343,8 @@ describe("Retrieve single exchange rate for a pair and bulk exchange rates for m
     });
 });
 
-describe("Retrieve single historical exchange rate for a pair and bulk historical exchange rates for multiple pairs", function () {
-    it("can retrieve a single historical exchange rate", function () {
+describe('Retrieve single historical exchange rate for a pair and bulk historical exchange rates for multiple pairs', function () {
+    it('can retrieve a single historical exchange rate', function () {
         // Arrange
         $baseCurrency = 'USD';
         $targetCurrency = 'EUR';
@@ -365,7 +365,7 @@ describe("Retrieve single historical exchange rate for a pair and bulk historica
         $this->assertEquals($date->format('Y-m-d'), Carbon::parse($result->date_time)->format('Y-m-d'));
     });
 
-    it("can retrieve bulk historical exchange rates by currencies pair", function () {
+    it('can retrieve bulk historical exchange rates by currencies pair', function () {
         // Arrange
         $date1 = Carbon::parse('2023-01-01');
         $date2 = Carbon::parse('2023-01-02');

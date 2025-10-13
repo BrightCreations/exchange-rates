@@ -21,6 +21,6 @@ class CurrenciesPairDto
 
     public function __toString(): string
     {
-        return $this->base_currency_code . '_' . $this->target_currency_code;
+        return $this->base_currency_code.'_'.$this->target_currency_code;
     }
 }

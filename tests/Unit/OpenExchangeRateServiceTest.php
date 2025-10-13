@@ -16,9 +16,10 @@ beforeEach(function () {
             // Match /latest.json?base={currency}
             if (preg_match('#/latest\\.json\\?base=([^&]+)#', $url, $matches)) {
                 $currency = $matches[1];
-                $json = json_decode(file_get_contents(__DIR__ . '/Data/OpenExchangeRate/open_exchange_rate_latest_response.json'), true);
+                $json = json_decode(file_get_contents(__DIR__.'/Data/OpenExchangeRate/open_exchange_rate_latest_response.json'), true);
                 $json['base'] = $currency;
                 $json['timestamp'] = Carbon::now()->timestamp; // ensure timestamp is present
+
                 return new \Illuminate\Http\Client\Response(
                     new \GuzzleHttp\Psr7\Response(200, [], json_encode($json))
                 );
@@ -27,13 +28,15 @@ beforeEach(function () {
             if (preg_match('#/historical/(\d{4}-\d{2}-\d{2})\\.json\\?base=([^&]+)#', $url, $matches)) {
                 $date = $matches[1];
                 $currency = $matches[2];
-                $json = json_decode(file_get_contents(__DIR__ . '/Data/OpenExchangeRate/open_exchange_rate_history_response.json'), true);
+                $json = json_decode(file_get_contents(__DIR__.'/Data/OpenExchangeRate/open_exchange_rate_history_response.json'), true);
                 $json['base'] = $currency;
                 $json['timestamp'] = Carbon::parse($date)->timestamp; // ensure timestamp is present
+
                 return new \Illuminate\Http\Client\Response(
                     new \GuzzleHttp\Psr7\Response(200, [], json_encode($json))
                 );
             }
+
             // Default fallback
             return new \Illuminate\Http\Client\Response(
                 new \GuzzleHttp\Psr7\Response(200, [], json_encode([]))
@@ -41,19 +44,19 @@ beforeEach(function () {
         });
     });
     $this->service = app(OpenExchangeRateService::class, [
-        'http' => $http
+        'http' => $http,
     ]);
 });
 
-describe("Store and retrieve exchange rates", function () {
-    it("should store and retrieve exchange rates", function () {
+describe('Store and retrieve exchange rates', function () {
+    it('should store and retrieve exchange rates', function () {
         /** @var OpenExchangeRateService $service */
         $service = $this->service;
-        $exchangeRates = $service->storeExchangeRates("USD");
+        $exchangeRates = $service->storeExchangeRates('USD');
         $this->assertNotNull($exchangeRates);
         $this->assertNotEmpty($exchangeRates);
         $this->assertInstanceOf(CurrencyExchangeRate::class, $exchangeRates[0]);
-        $this->assertEquals("USD", $exchangeRates[0]->base_currency_code);
+        $this->assertEquals('USD', $exchangeRates[0]->base_currency_code);
         $targetCurrencyCodes = $exchangeRates->pluck('target_currency_code')->toArray();
         $dbRates = CurrencyExchangeRate::where('base_currency_code', 'USD')
             ->whereIn('target_currency_code', $targetCurrencyCodes)
@@ -72,10 +75,10 @@ describe("Store and retrieve exchange rates", function () {
         }
     });
 
-    it("should store and retrieve bulk exchange rates", function () {
+    it('should store and retrieve bulk exchange rates', function () {
         /** @var OpenExchangeRateService $service */
         $service = $this->service;
-        $exchangeRates = $service->storeBulkExchangeRatesForMultipleCurrencies(["USD", "EUR"]);
+        $exchangeRates = $service->storeBulkExchangeRatesForMultipleCurrencies(['USD', 'EUR']);
         $this->assertNotNull($exchangeRates);
         $this->assertNotEmpty($exchangeRates);
         $this->assertCount(2, $exchangeRates);
@@ -98,33 +101,33 @@ describe("Store and retrieve exchange rates", function () {
         }
     });
 
-    it("should store and retrieve exchange rates history", function () {
+    it('should store and retrieve exchange rates history', function () {
         /** @var OpenExchangeRateService $service */
         $service = $this->service;
-        $exchangeRates = $service->storeHistoricalExchangeRates("USD", Carbon::now()->subDays(1));
+        $exchangeRates = $service->storeHistoricalExchangeRates('USD', Carbon::now()->subDays(1));
         $this->assertNotNull($exchangeRates);
         $this->assertNotEmpty($exchangeRates);
         $this->assertInstanceOf(CurrencyExchangeRateHistory::class, $exchangeRates[0]);
-        $this->assertEquals("USD", $exchangeRates[0]->base_currency_code);
+        $this->assertEquals('USD', $exchangeRates[0]->base_currency_code);
     });
 
-    it("should store and retrieve exchange rates history for multiple currencies", function () {
+    it('should store and retrieve exchange rates history for multiple currencies', function () {
         /** @var OpenExchangeRateService $service */
         $service = $this->service;
         $date = Carbon::now()->subDays(1);
         $dtos = [
-            new HistoricalBaseCurrencyDto("USD", $date),
-            new HistoricalBaseCurrencyDto("EUR", $date),
+            new HistoricalBaseCurrencyDto('USD', $date),
+            new HistoricalBaseCurrencyDto('EUR', $date),
         ];
         $exchangeRates = $service->storeBulkHistoricalExchangeRatesForMultipleCurrencies($dtos);
         $this->assertNotNull($exchangeRates);
         $this->assertNotEmpty($exchangeRates);
         $this->assertCount(2, $exchangeRates);
-        $this->assertArrayHasKey("USD", $exchangeRates);
-        $this->assertArrayHasKey("EUR", $exchangeRates);
-        $this->assertInstanceOf(CurrencyExchangeRateHistory::class, $exchangeRates["USD"][$date->format('Y-m-d')][0]);
-        $this->assertInstanceOf(CurrencyExchangeRateHistory::class, $exchangeRates["EUR"][$date->format('Y-m-d')][0]);
-        $this->assertEquals("USD", $exchangeRates["USD"][$date->format('Y-m-d')][0]->base_currency_code);
-        $this->assertEquals("EUR", $exchangeRates["EUR"][$date->format('Y-m-d')][0]->base_currency_code);
+        $this->assertArrayHasKey('USD', $exchangeRates);
+        $this->assertArrayHasKey('EUR', $exchangeRates);
+        $this->assertInstanceOf(CurrencyExchangeRateHistory::class, $exchangeRates['USD'][$date->format('Y-m-d')][0]);
+        $this->assertInstanceOf(CurrencyExchangeRateHistory::class, $exchangeRates['EUR'][$date->format('Y-m-d')][0]);
+        $this->assertEquals('USD', $exchangeRates['USD'][$date->format('Y-m-d')][0]->base_currency_code);
+        $this->assertEquals('EUR', $exchangeRates['EUR'][$date->format('Y-m-d')][0]->base_currency_code);
     });
 });
