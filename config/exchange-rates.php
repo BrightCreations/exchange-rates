@@ -1,11 +1,22 @@
 <?php
 
 use BrightCreations\ExchangeRates\Concretes\ExchangeRateApiService;
+use BrightCreations\ExchangeRates\Concretes\OpenExchangeRateService;
+use BrightCreations\ExchangeRates\Concretes\WorldBankExchangeRateApiService;
+use BrightCreations\ExchangeRates\Concretes\FallbackExchangeRateService;
 
 return [
 
     // defaults
-    'default_service' => ExchangeRateApiService::class,
+    'default_service' => FallbackExchangeRateService::class,
+
+    // Fallback order for exchange rate services
+    // The FallbackExchangeRateService will try each service in this order until one succeeds
+    'fallback_order' => [
+        ExchangeRateApiService::class,
+        OpenExchangeRateService::class,
+        WorldBankExchangeRateApiService::class,
+    ],
 
     // exchange rate services
     'services' => [
@@ -20,9 +31,9 @@ return [
             'base_url'  => env('OPEN_EXCHANGE_RATE_BASE_URL', 'https://openexchangerates.org/api/'),
             'app_id'    => env('OPEN_EXCHANGE_RATE_APP_ID'),
         ],
-        // @see https://chatgpt.com/share/68ebbd85-d940-8006-9a1b-ff855a9513a1
+        // @see https://api.worldbank.org/v2/country/all/indicator/PA.NUS.FCRF
         'world_bank_exchange_rate' => [
-            'base_url'  => env('WORLD_BANK_EXCHANGE_RATE_BASE_URL', 'https://api.worldbank.org/v2/'),
+            'base_url'  => env('WORLD_BANK_EXCHANGE_RATE_BASE_URL', 'https://api.worldbank.org/v2'),
         ],
     ],
 
