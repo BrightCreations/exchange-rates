@@ -11,7 +11,7 @@ trait TimeLoggable
      * Logs the time taken by the closure to execute and if the result is a PSR7 ResponseInterface,
      * it logs the response as well.
      *
-     * @param Closure $closure
+     * @param  Closure  $closure
      * @return mixed
      */
     public function logTime($closure)
@@ -20,13 +20,13 @@ trait TimeLoggable
         $result = $closure();
         $end = microtime(true);
         $time = $end - $start;
-        Log::debug("[BrightCreations\ExchangeRates] >>>>> Time: " . $time);
+        Log::debug("[BrightCreations\ExchangeRates] >>>>> Time: ".$time);
         if ($result instanceof Response) {
-            Log::debug("[BrightCreations\ExchangeRates] >>>>> Response: " . json_encode($result->json()));
+            Log::debug("[BrightCreations\ExchangeRates] >>>>> Response: ".json_encode($result->json()));
         } else {
-            Log::debug("[BrightCreations\ExchangeRates] >>>>> Closure Return: " . $result);
+            Log::debug("[BrightCreations\ExchangeRates] >>>>> Closure Return: ".$result);
         }
+
         return $result;
     }
-
 }

@@ -659,6 +659,235 @@ class ExchangeRatesTest extends TestCase
 }
 ```
 
+## Fallback & World Bank Examples
+
+### Using Fallback Service (Automatic)
+
+The default configuration uses the `FallbackExchangeRateService` which automatically tries services in order:
+
+```php
+<?php
+
+use BrightCreations\ExchangeRates\Facades\ExchangeRate;
+use Illuminate\Support\Facades\Log;
+
+// The facade uses FallbackExchangeRateService by default
+// It will try: ExchangeRateAPI → OpenExchangeRates → WorldBank
+$rates = ExchangeRate::storeExchangeRates('EUR');
+
+// Check logs to see which service succeeded
+Log::info('Exchange rates fetched successfully', [
+    'currency' => 'EUR',
+    'count' => $rates->count()
+]);
+```
+
+### Using World Bank Service Directly
+
+```php
+<?php
+
+use BrightCreations\ExchangeRates\Concretes\WorldBankExchangeRateApiService;
+
+class FreeExchangeRateController extends Controller
+{
+    public function __construct(
+        private WorldBankExchangeRateApiService $worldBankService
+    ) {}
+
+    public function getYearlyAverages(string $currency)
+    {
+        // World Bank provides yearly average rates (free, no API key)
+        $rates = $this->worldBankService->storeExchangeRates($currency);
+        
+        return response()->json([
+            'note' => 'These are yearly average rates from World Bank',
+            'currency' => $currency,
+            'rates' => $rates->map(fn($r) => [
+                'target' => $r->target_currency_code,
+                'rate' => $r->exchange_rate,
+                'year' => $r->last_update_date->format('Y')
+            ])
+        ]);
+    }
+
+    public function getHistoricalYearlyRate(string $base, string $target, int $year)
+    {
+        $date = Carbon::create($year, 1, 1);
+        
+        // Fetch historical rates for a specific year
+        $historicalRates = $this->worldBankService->storeHistoricalExchangeRates($base, $date);
+        
+        $targetRate = $historicalRates->firstWhere('target_currency_code', $target);
+        
+        if (!$targetRate) {
+            return response()->json(['error' => 'Rate not found'], 404);
+        }
+        
+        return response()->json([
+            'base' => $base,
+            'target' => $target,
+            'year' => $year,
+            'rate' => $targetRate->exchange_rate,
+            'note' => 'Yearly average from World Bank data'
+        ]);
+    }
+}
+```
+
+### Custom Fallback Order
+
+```php
+<?php
+
+use BrightCreations\ExchangeRates\Concretes\FallbackExchangeRateService;
+use BrightCreations\ExchangeRates\Concretes\WorldBankExchangeRateApiService;
+use BrightCreations\ExchangeRates\Concretes\OpenExchangeRateService;
+
+class CustomFallbackController extends Controller
+{
+    public function useFreeServicesFirst()
+    {
+        $fallbackService = app(FallbackExchangeRateService::class);
+        
+        // Set custom order: try free services first
+        $fallbackService->setFallbackServices([
+            WorldBankExchangeRateApiService::class,  // Free
+            OpenExchangeRateService::class,          // Has free tier
+        ]);
+        
+        $rates = $fallbackService->storeExchangeRates('USD');
+        
+        // Check which service succeeded
+        $currentService = $fallbackService->getCurrentService();
+        $serviceName = class_basename($currentService);
+        
+        return response()->json([
+            'rates' => $rates,
+            'served_by' => $serviceName
+        ]);
+    }
+}
+```
+
+### Bulk Operations with World Bank
+
+```php
+<?php
+
+use BrightCreations\ExchangeRates\Concretes\WorldBankExchangeRateApiService;
+
+class BulkWorldBankController extends Controller
+{
+    public function __construct(
+        private WorldBankExchangeRateApiService $worldBankService
+    ) {}
+
+    public function bulkFetchYearlyRates()
+    {
+        $currencies = ['USD', 'EUR', 'GBP', 'JPY', 'CNY'];
+        
+        // Efficient: fetches World Bank data once, computes rates for all currencies
+        $bulkRates = $this->worldBankService
+            ->storeBulkExchangeRatesForMultipleCurrencies($currencies);
+        
+        return response()->json([
+            'currencies_count' => $currencies,
+            'rates' => $bulkRates->mapWithKeys(function ($rates, $base) {
+                return [$base => $rates->count()];
+            }),
+            'note' => 'World Bank fetches once and computes cross-rates efficiently'
+        ]);
+    }
+}
+```
+
+### Monitoring Fallback Usage
+
+```php
+<?php
+
+use BrightCreations\ExchangeRates\Facades\ExchangeRate;
+use Illuminate\Support\Facades\Log;
+
+class MonitoredExchangeController extends Controller
+{
+    public function getRatesWithMonitoring(string $currency)
+    {
+        try {
+            $startTime = microtime(true);
+            
+            $rates = ExchangeRate::storeExchangeRates($currency);
+            
+            $duration = microtime(true) - $startTime;
+            
+            // Log metrics
+            Log::info('Exchange rate fetch completed', [
+                'currency' => $currency,
+                'duration_ms' => round($duration * 1000, 2),
+                'rates_count' => $rates->count(),
+                'timestamp' => now()
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $rates,
+                'meta' => [
+                    'duration_ms' => round($duration * 1000, 2)
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            // Log failure
+            Log::error('All exchange rate services failed', [
+                'currency' => $currency,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'All services unavailable. Please try again later.'
+            ], 503);
+        }
+    }
+}
+```
+
+### Custom Country-to-Currency Mapping
+
+```php
+<?php
+
+use BrightCreations\ExchangeRates\Concretes\WorldBankExchangeRateApiService;
+use BrightCreations\ExchangeRates\Concretes\Helpers\WorldBankExchangeRateHelper;
+
+class CustomMappingService
+{
+    use WorldBankExchangeRateHelper;
+    
+    public function __construct()
+    {
+        // Add custom overrides for special cases
+        $this->addCurrencyOverride('XKX', 'EUR');  // Kosovo uses EUR
+        $this->addCurrencyOverride('PSE', 'ILS');  // Palestine - prefer ILS
+    }
+    
+    public function getAvailableCurrenciesForYear(int $year)
+    {
+        // Mock fetching World Bank data
+        $worldBankData = $this->fetchWorldBankData($year);
+        
+        $currencies = $this->getAvailableCurrencies($worldBankData);
+        
+        return response()->json([
+            'year' => $year,
+            'available_currencies' => $currencies,
+            'count' => count($currencies)
+        ]);
+    }
+}
+```
+
 ## Related Documentation
 
 - **[Installation & Configuration](installation.md)** - Setup instructions

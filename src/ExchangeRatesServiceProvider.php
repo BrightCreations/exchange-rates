@@ -15,22 +15,22 @@ class ExchangeRatesServiceProvider extends ServiceProvider
     {
         // Publish config file
         $this->publishes([
-            __DIR__ . '/../config/exchange-rates.php' => $this->app->configPath('exchange-rates.php'),
+            __DIR__.'/../config/exchange-rates.php' => $this->app->configPath('exchange-rates.php'),
         ], 'exchange-rates-config');
 
         // Publish Migrations
         $this->publishes([
-            __DIR__ . '/Database/Migrations' => $this->app->databasePath('migrations'),
+            __DIR__.'/Database/Migrations' => $this->app->databasePath('migrations'),
         ], 'exchange-rate-migrations');
 
         // Load Migrations
-        $this->loadMigrationsFrom(__DIR__ . '/Database/Migrations');
+        $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
     }
 
     public function register()
     {
         $this->mergeConfigFrom(
-            __DIR__ . '/../config/exchange-rates.php',
+            __DIR__.'/../config/exchange-rates.php',
             'exchange-rates'
         );
 
@@ -38,22 +38,25 @@ class ExchangeRatesServiceProvider extends ServiceProvider
         $this->app->singleton(CurrencyExchangeRateRepositoryInterface::class, CurrencyExchangeRateRepository::class);
         $this->app->singleton(ExchangeRateServiceInterface::class, function () {
             $service = $this->app->make(Config::get('exchange-rates.default_service'));
-            if (!($service instanceof ExchangeRateServiceInterface)) {
+            if (! ($service instanceof ExchangeRateServiceInterface)) {
                 throw new \RuntimeException('The configured exchange rate service does not implement ExchangeRateServiceInterface.');
             }
+
             return $service;
         });
         $this->app->singleton(HistoricalSupportExchangeRateServiceInterface::class, function () {
             $service = $this->app->make(Config::get('exchange-rates.default_service'));
-            if (!($service instanceof HistoricalSupportExchangeRateServiceInterface)) {
+            if (! ($service instanceof HistoricalSupportExchangeRateServiceInterface)) {
                 throw new \RuntimeException('The configured exchange rate service does not implement HistoricalSupportExchangeRateServiceInterface.');
             }
+
             return $service;
         });
 
-        // Register the command
+        // Register the commands
         $this->commands([
             \BrightCreations\ExchangeRates\Console\Commands\MigrateExchangeRatesCommand::class,
+            \BrightCreations\ExchangeRates\Console\Commands\BackfillExchangeRatesCommand::class,
         ]);
     }
 }

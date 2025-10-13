@@ -20,7 +20,7 @@ return new class extends Migration
                 $table->string('exchange_rate', 20);
                 $table->dateTime('date_time');
                 $table->timestamp('last_update_date')->default(Carbon::now());
-    
+
                 $table->unique([
                     'base_currency_code',
                     'target_currency_code',

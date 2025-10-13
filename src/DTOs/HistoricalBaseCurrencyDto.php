@@ -23,6 +23,6 @@ class HistoricalBaseCurrencyDto
 
     public function __toString(): string
     {
-        return $this->base_currency_code . '_' . $this->date_time->format('Y-m-d');
+        return $this->base_currency_code.'_'.$this->date_time->format('Y-m-d');
     }
 }

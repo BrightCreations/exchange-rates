@@ -38,13 +38,15 @@
         "illuminate/database": "^10.0 || ^11.0 || ^12.0",
         "illuminate/http": "^10.0 || ^11.0 || ^12.0",
         "illuminate/console": "^10.0 || ^11.0 || ^12.0",
-        "guzzlehttp/guzzle": "^7.9"
+        "guzzlehttp/guzzle": "^7.9",
+        "pragmarx/countries": "^1.0"
     },
     "require-dev": {
         "pestphp/pest": "^2.36",
         "pestphp/pest-plugin-laravel": "^2.4",
         "orchestra/testbench": "^8.0",
-        "vlucas/phpdotenv": "^5.6"
+        "vlucas/phpdotenv": "^5.6",
+        "laravel/pint": "^1.0 || ^1.25"
     },
     "config": {
         "allow-plugins": {
@@ -52,6 +54,7 @@
         }
     },
     "scripts": {
-        "test": "./vendor/bin/pest"
+        "test": "./vendor/bin/pest",
+        "pint": "./vendor/bin/pint"
     }
 }

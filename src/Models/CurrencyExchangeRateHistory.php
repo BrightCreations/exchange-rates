@@ -24,7 +24,9 @@ class CurrencyExchangeRateHistory extends Model
     ];
 
     public $table = 'currency_exchange_rates_history';
+
     public static $tablename = 'currency_exchange_rates_history';
+
     public $timestamps = false;
 
     /*
@@ -67,8 +69,7 @@ class CurrencyExchangeRateHistory extends Model
     /**
      * Construct a CurrencyExchangeRateHistory model from a HistoricalExchangeRatesDto
      *
-     * @param HistoricalExchangeRatesDto $dto
-     * 
+     *
      * @return Collection<CurrencyExchangeRateHistory>
      */
     public static function constructFromHistoricalExchangeRatesDto(HistoricalExchangeRatesDto $dto): Collection
@@ -79,13 +80,14 @@ class CurrencyExchangeRateHistory extends Model
         $now = Carbon::now();
         foreach ($dto->getExchangeRates() as $code => $rate) {
             $data->push(new CurrencyExchangeRateHistory([
-                'base_currency_code'    => $base_code,
-                'target_currency_code'  => $code,
-                'exchange_rate'         => $rate,
-                'date_time'             => $date_time,
-                'last_update_date'      => $now,
+                'base_currency_code' => $base_code,
+                'target_currency_code' => $code,
+                'exchange_rate' => $rate,
+                'date_time' => $date_time,
+                'last_update_date' => $now,
             ]));
         }
+
         return $data;
     }
     /*
