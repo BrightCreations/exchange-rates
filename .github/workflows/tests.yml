@@ -31,5 +31,8 @@ jobs:
     - name: Install dependencies
       run: composer install --prefer-dist --no-interaction
 
+    - name: Run Pint
+      run: vendor/bin/pint
+
     - name: Execute tests (Unit and Feature tests) via Pest
       run: vendor/bin/pest 
