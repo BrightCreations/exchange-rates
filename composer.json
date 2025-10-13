@@ -38,7 +38,8 @@
         "illuminate/database": "^10.0 || ^11.0 || ^12.0",
         "illuminate/http": "^10.0 || ^11.0 || ^12.0",
         "illuminate/console": "^10.0 || ^11.0 || ^12.0",
-        "guzzlehttp/guzzle": "^7.9"
+        "guzzlehttp/guzzle": "^7.9",
+        "pragmarx/countries": "^1.0"
     },
     "require-dev": {
         "pestphp/pest": "^2.36",
