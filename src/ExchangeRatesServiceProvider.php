@@ -51,9 +51,10 @@ class ExchangeRatesServiceProvider extends ServiceProvider
             return $service;
         });
 
-        // Register the command
+        // Register the commands
         $this->commands([
             \BrightCreations\ExchangeRates\Console\Commands\MigrateExchangeRatesCommand::class,
+            \BrightCreations\ExchangeRates\Console\Commands\BackfillExchangeRatesCommand::class,
         ]);
     }
 }
