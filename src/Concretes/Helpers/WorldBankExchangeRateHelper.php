@@ -7,13 +7,12 @@ use PragmaRX\Countries\Package\Countries;
 
 /**
  * WorldBankExchangeRateHelper is a helper trait that provides methods to help with World Bank Exchange Rate API.
- * 
- * @package BrightCreations\ExchangeRates\Concretes\Helpers
+ *
  * @author Bright Creations <kareem.shaaban@brightcreations.com>
  * @license MIT
- * 
+ *
  * Example response for `GET https://api.worldbank.org/v2/country/all/indicator/PA.NUS.FCRF?date=2024&format=json&per_page=1000` endpoint:
- * 
+ *
  * ```json
 [
     {
@@ -50,7 +49,7 @@ trait WorldBankExchangeRateHelper
     /**
      * Manual overrides for ISO3 to currency code mapping.
      * Used for special cases, territories, or when pragmarx/countries data is incomplete/incorrect.
-     * 
+     *
      * @var array<string, string>
      */
     protected array $iso3ToCurrencyOverrides = [
@@ -71,7 +70,7 @@ trait WorldBankExchangeRateHelper
     /**
      * ISO3 codes that represent aggregates/regions, not countries.
      * These should be filtered out when building currency exchange rates.
-     * 
+     *
      * @var array<string>
      */
     protected array $aggregateRegionCodes = [
@@ -193,7 +192,7 @@ trait WorldBankExchangeRateHelper
     /**
      * Priority mapping for countries that use multiple currencies.
      * Maps ISO3 to the primary/preferred currency code.
-     * 
+     *
      * @var array<string, string>
      */
     protected array $multiCurrencyPriority = [
@@ -205,8 +204,8 @@ trait WorldBankExchangeRateHelper
 
     /**
      * Map ISO3 country code to ISO4217 currency code.
-     * 
-     * @param string $iso3Code The ISO3 country code
+     *
+     * @param  string  $iso3Code  The ISO3 country code
      * @return string|null The ISO4217 currency code, or null if not found/aggregate
      */
     protected function mapCountryToCurrency(string $iso3Code): ?string
@@ -228,17 +227,17 @@ trait WorldBankExchangeRateHelper
 
         try {
             // Use pragmarx/countries to get currency
-            $countries = new Countries();
+            $countries = new Countries;
             $country = $countries->where('cca3', $iso3Code)->first();
 
-            if (!$country) {
+            if (! $country) {
                 return null;
             }
 
             // Get currencies - returns collection of currency objects
             $currencies = $country->currencies ?? null;
 
-            if (!$currencies) {
+            if (! $currencies) {
                 return null;
             }
 
@@ -261,14 +260,15 @@ trait WorldBankExchangeRateHelper
             logger()->warning("Failed to map country $iso3Code to currency", [
                 'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
 
     /**
      * Check if an ISO3 code represents an aggregate/region rather than a country.
-     * 
-     * @param string $iso3Code The ISO3 code to check
+     *
+     * @param  string  $iso3Code  The ISO3 code to check
      * @return bool True if it's an aggregate, false otherwise
      */
     protected function isAggregateRegion(string $iso3Code): bool
@@ -278,10 +278,9 @@ trait WorldBankExchangeRateHelper
 
     /**
      * Add or update a currency mapping override.
-     * 
-     * @param string $iso3Code The ISO3 country code
-     * @param string $currencyCode The ISO4217 currency code
-     * @return void
+     *
+     * @param  string  $iso3Code  The ISO3 country code
+     * @param  string  $currencyCode  The ISO4217 currency code
      */
     public function addCurrencyOverride(string $iso3Code, string $currencyCode): void
     {
@@ -291,8 +290,8 @@ trait WorldBankExchangeRateHelper
     /**
      * Parse World Bank API response and build USD-anchored currency rates.
      * Filters out aggregates, nulls, and maps countries to currencies.
-     * 
-     * @param array $worldBankResponse Raw API response from World Bank
+     *
+     * @param  array  $worldBankResponse  Raw API response from World Bank
      * @return array<string, float> Map of currency code => rate (LCU per USD)
      */
     protected function parseWorldBankResponseToUsdRates(array $worldBankResponse): array
@@ -300,7 +299,7 @@ trait WorldBankExchangeRateHelper
         $usdRates = [];
 
         // World Bank response format: [metadata, [data items]]
-        if (!isset($worldBankResponse[1]) || !is_array($worldBankResponse[1])) {
+        if (! isset($worldBankResponse[1]) || ! is_array($worldBankResponse[1])) {
             return $usdRates;
         }
 
@@ -308,7 +307,7 @@ trait WorldBankExchangeRateHelper
 
         foreach ($dataItems as $item) {
             // Skip if no country code
-            if (!isset($item['countryiso3code'])) {
+            if (! isset($item['countryiso3code'])) {
                 continue;
             }
 
@@ -334,7 +333,7 @@ trait WorldBankExchangeRateHelper
 
             // Store the rate (LCU per USD)
             // If multiple countries use same currency, we'll handle in aggregation policy
-            if (!isset($usdRates[$currencyCode])) {
+            if (! isset($usdRates[$currencyCode])) {
                 $usdRates[$currencyCode] = (float) $value;
             } else {
                 // Currency collision - apply aggregation policy
@@ -356,11 +355,11 @@ trait WorldBankExchangeRateHelper
     /**
      * Aggregate currency rates when multiple countries share the same currency.
      * Uses priority-based selection or averaging based on policy.
-     * 
-     * @param string $currencyCode The currency code
-     * @param float $existingRate The existing rate for this currency
-     * @param float $newRate The new rate from another country
-     * @param string $newCountryIso3 The ISO3 code of the new country
+     *
+     * @param  string  $currencyCode  The currency code
+     * @param  float  $existingRate  The existing rate for this currency
+     * @param  float  $newRate  The new rate from another country
+     * @param  string  $newCountryIso3  The ISO3 code of the new country
      * @return float The aggregated rate
      */
     protected function aggregateCurrencyRate(
@@ -398,9 +397,9 @@ trait WorldBankExchangeRateHelper
 
     /**
      * Fetch all pages from World Bank API if paginated.
-     * 
-     * @param array $initialResponse The first page response
-     * @param callable $fetchPage Callback to fetch a specific page: function(int $page): array
+     *
+     * @param  array  $initialResponse  The first page response
+     * @param  callable  $fetchPage  Callback to fetch a specific page: function(int $page): array
      * @return array Combined data from all pages
      */
     protected function fetchAllPages(array $initialResponse, callable $fetchPage): array
@@ -408,7 +407,7 @@ trait WorldBankExchangeRateHelper
         $allData = [];
 
         // Extract pagination info
-        if (!isset($initialResponse[0])) {
+        if (! isset($initialResponse[0])) {
             return $initialResponse;
         }
 
@@ -439,16 +438,16 @@ trait WorldBankExchangeRateHelper
 
     /**
      * Compute cross-currency exchange rates from USD-anchored rates.
-     * 
+     *
      * Given rates in USD (e.g., EUR = 0.92 USD, GBP = 0.78 USD),
      * compute rates for a specific base currency.
-     * 
+     *
      * Example: If base is EUR:
      * - USD→EUR rate = 0.92 (from World Bank)
      * - EUR→GBP = GBP_per_USD / EUR_per_USD = 0.78 / 0.92 = 0.8478
-     * 
-     * @param string $baseCurrency The base currency code
-     * @param array<string, float> $usdRates Map of currency => rate in USD
+     *
+     * @param  string  $baseCurrency  The base currency code
+     * @param  array<string, float>  $usdRates  Map of currency => rate in USD
      * @return array<string, float> Map of currency => rate relative to base
      */
     protected function computeCrossCurrencyRates(string $baseCurrency, array $usdRates): array
@@ -480,9 +479,9 @@ trait WorldBankExchangeRateHelper
 
     /**
      * Build exchange rates for multiple base currencies from USD-anchored rates.
-     * 
-     * @param array<string, float> $usdRates Map of currency => USD rate
-     * @param array $baseCurrencies List of base currencies to compute rates for
+     *
+     * @param  array<string, float>  $usdRates  Map of currency => USD rate
+     * @param  array  $baseCurrencies  List of base currencies to compute rates for
      * @return array<string, array<string, float>> Map of base => [target => rate]
      */
     protected function buildMultiBaseCurrencyRates(array $usdRates, array $baseCurrencies): array
@@ -499,9 +498,9 @@ trait WorldBankExchangeRateHelper
     /**
      * Extract exchange rates for a specific currency from World Bank response.
      * This is the main method that orchestrates parsing and conversion.
-     * 
-     * @param string $currency_code The base currency code
-     * @param array $worldBankResponse The World Bank API response
+     *
+     * @param  string  $currency_code  The base currency code
+     * @param  array  $worldBankResponse  The World Bank API response
      * @return array<string, float> Exchange rates with base currency
      */
     public function extractExchangeRatesForCurrency(string $currency_code, array $worldBankResponse): array
@@ -522,9 +521,9 @@ trait WorldBankExchangeRateHelper
     /**
      * Extract exchange rates for multiple base currencies from World Bank response.
      * More efficient than calling extractExchangeRatesForCurrency multiple times.
-     * 
-     * @param array $currencyCodes List of base currency codes
-     * @param array $worldBankResponse The World Bank API response
+     *
+     * @param  array  $currencyCodes  List of base currency codes
+     * @param  array  $worldBankResponse  The World Bank API response
      * @return array<string, array<string, float>> Map of base => [target => rate]
      */
     public function extractExchangeRatesForMultipleCurrencies(array $currencyCodes, array $worldBankResponse): array
@@ -544,13 +543,14 @@ trait WorldBankExchangeRateHelper
 
     /**
      * Get available currencies from a World Bank response.
-     * 
-     * @param array $worldBankResponse The World Bank API response
+     *
+     * @param  array  $worldBankResponse  The World Bank API response
      * @return array<string> List of available currency codes
      */
     public function getAvailableCurrencies(array $worldBankResponse): array
     {
         $usdRates = $this->parseWorldBankResponseToUsdRates($worldBankResponse);
+
         return array_keys($usdRates);
     }
 }

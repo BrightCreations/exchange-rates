@@ -1,11 +1,7 @@
 <?php
 
-use BrightCreations\ExchangeRates\Concretes\WorldBankExchangeRateApiService;
 use BrightCreations\ExchangeRates\Concretes\Helpers\WorldBankExchangeRateHelper;
-use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
-use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
     // Clear cache before each test
@@ -13,7 +9,8 @@ beforeEach(function () {
 });
 
 test('mapCountryToCurrency maps ARE to AED correctly', function () {
-    $helper = new class {
+    $helper = new class
+    {
         use WorldBankExchangeRateHelper;
 
         public function testMapCountryToCurrency(string $iso3Code): ?string
@@ -27,7 +24,8 @@ test('mapCountryToCurrency maps ARE to AED correctly', function () {
 });
 
 test('mapCountryToCurrency maps GBR to GBP correctly', function () {
-    $helper = new class {
+    $helper = new class
+    {
         use WorldBankExchangeRateHelper;
 
         public function testMapCountryToCurrency(string $iso3Code): ?string
@@ -41,7 +39,8 @@ test('mapCountryToCurrency maps GBR to GBP correctly', function () {
 });
 
 test('mapCountryToCurrency maps EMU to EUR via override', function () {
-    $helper = new class {
+    $helper = new class
+    {
         use WorldBankExchangeRateHelper;
 
         public function testMapCountryToCurrency(string $iso3Code): ?string
@@ -55,7 +54,8 @@ test('mapCountryToCurrency maps EMU to EUR via override', function () {
 });
 
 test('mapCountryToCurrency maps USD territories correctly', function () {
-    $helper = new class {
+    $helper = new class
+    {
         use WorldBankExchangeRateHelper;
 
         public function testMapCountryToCurrency(string $iso3Code): ?string
@@ -70,7 +70,8 @@ test('mapCountryToCurrency maps USD territories correctly', function () {
 });
 
 test('isAggregateRegion filters out aggregate codes', function () {
-    $helper = new class {
+    $helper = new class
+    {
         use WorldBankExchangeRateHelper;
 
         public function testIsAggregateRegion(string $iso3Code): bool
@@ -87,7 +88,8 @@ test('isAggregateRegion filters out aggregate codes', function () {
 });
 
 test('parseWorldBankResponseToUsdRates filters nulls and aggregates', function () {
-    $helper = new class {
+    $helper = new class
+    {
         use WorldBankExchangeRateHelper;
 
         public function testParseWorldBankResponseToUsdRates(array $response): array
@@ -104,7 +106,7 @@ test('parseWorldBankResponseToUsdRates filters nulls and aggregates', function (
             ['countryiso3code' => 'USA', 'value' => 1.0], // Valid
             ['countryiso3code' => 'ARB', 'value' => 5.5], // Aggregate - should be filtered
             ['countryiso3code' => 'EMU', 'value' => 0.923889], // EUR via override
-        ]
+        ],
     ];
 
     $result = $helper->testParseWorldBankResponseToUsdRates($mockResponse);
@@ -118,7 +120,8 @@ test('parseWorldBankResponseToUsdRates filters nulls and aggregates', function (
 });
 
 test('computeCrossCurrencyRates computes correct cross rates', function () {
-    $helper = new class {
+    $helper = new class
+    {
         use WorldBankExchangeRateHelper;
 
         public function testComputeCrossCurrencyRates(string $base, array $usdRates): array
@@ -144,7 +147,8 @@ test('computeCrossCurrencyRates computes correct cross rates', function () {
 });
 
 test('currency aggregation prefers priority countries', function () {
-    $helper = new class {
+    $helper = new class
+    {
         use WorldBankExchangeRateHelper;
 
         public function testAggregateCurrencyRate(string $currency, float $existing, float $new, string $newIso3): float
@@ -167,7 +171,8 @@ test('currency aggregation prefers priority countries', function () {
 });
 
 test('extractExchangeRatesForCurrency returns correct rates', function () {
-    $helper = new class {
+    $helper = new class
+    {
         use WorldBankExchangeRateHelper;
 
         public function testExtractExchangeRatesForCurrency(string $currency, array $response): array
@@ -183,7 +188,7 @@ test('extractExchangeRatesForCurrency returns correct rates', function () {
             ['countryiso3code' => 'USA', 'value' => 1.0],
             ['countryiso3code' => 'EMU', 'value' => 0.923889],
             ['countryiso3code' => 'JPN', 'value' => 150.0],
-        ]
+        ],
     ];
 
     $rates = $helper->testExtractExchangeRatesForCurrency('EUR', $mockResponse);
@@ -196,7 +201,8 @@ test('extractExchangeRatesForCurrency returns correct rates', function () {
 });
 
 test('extractExchangeRatesForMultipleCurrencies is efficient', function () {
-    $helper = new class {
+    $helper = new class
+    {
         use WorldBankExchangeRateHelper;
 
         public function testExtractExchangeRatesForMultipleCurrencies(array $currencies, array $response): array
@@ -211,7 +217,7 @@ test('extractExchangeRatesForMultipleCurrencies is efficient', function () {
             ['countryiso3code' => 'GBR', 'value' => 0.782414],
             ['countryiso3code' => 'USA', 'value' => 1.0],
             ['countryiso3code' => 'EMU', 'value' => 0.923889],
-        ]
+        ],
     ];
 
     $multiRates = $helper->testExtractExchangeRatesForMultipleCurrencies(['EUR', 'GBP', 'USD'], $mockResponse);
@@ -225,7 +231,8 @@ test('extractExchangeRatesForMultipleCurrencies is efficient', function () {
 });
 
 test('getAvailableCurrencies returns all mapped currencies', function () {
-    $helper = new class {
+    $helper = new class
+    {
         use WorldBankExchangeRateHelper;
 
         public function testGetAvailableCurrencies(array $response): array
@@ -241,7 +248,7 @@ test('getAvailableCurrencies returns all mapped currencies', function () {
             ['countryiso3code' => 'USA', 'value' => 1.0],
             ['countryiso3code' => 'EMU', 'value' => 0.923889],
             ['countryiso3code' => 'AFE', 'value' => null], // Filtered
-        ]
+        ],
     ];
 
     $currencies = $helper->testGetAvailableCurrencies($mockResponse);
@@ -253,7 +260,8 @@ test('getAvailableCurrencies returns all mapped currencies', function () {
 });
 
 test('addCurrencyOverride allows custom mappings', function () {
-    $helper = new class {
+    $helper = new class
+    {
         use WorldBankExchangeRateHelper;
 
         public function testMapCountryToCurrency(string $iso3Code): ?string

@@ -1,12 +1,11 @@
 <?php
 
-use BrightCreations\ExchangeRates\Concretes\FallbackExchangeRateService;
 use BrightCreations\ExchangeRates\Concretes\ExchangeRateApiService;
+use BrightCreations\ExchangeRates\Concretes\FallbackExchangeRateService;
 use BrightCreations\ExchangeRates\Concretes\OpenExchangeRateService;
 use BrightCreations\ExchangeRates\Concretes\WorldBankExchangeRateApiService;
 use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Config;
 
 beforeEach(function () {

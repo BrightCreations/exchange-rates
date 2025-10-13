@@ -2,32 +2,31 @@
 
 namespace BrightCreations\ExchangeRates\Concretes;
 
+use BrightCreations\ExchangeRates\Concretes\Helpers\WorldBankExchangeRateHelper;
 use BrightCreations\ExchangeRates\Contracts\BaseExchangeRateService;
 use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
 use BrightCreations\ExchangeRates\Contracts\HistoricalSupportExchangeRateServiceInterface;
+use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
+use BrightCreations\ExchangeRates\DTOs\ExchangeRatesDto;
+use BrightCreations\ExchangeRates\DTOs\HistoricalBaseCurrencyDto;
+use BrightCreations\ExchangeRates\DTOs\HistoricalExchangeRatesDto;
+use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
+use BrightCreations\ExchangeRates\Models\CurrencyExchangeRateHistory;
 use BrightCreations\ExchangeRates\Traits\CollectableResponse;
 use BrightCreations\ExchangeRates\Traits\TimeLoggable;
-use BrightCreations\ExchangeRates\Concretes\Helpers\WorldBankExchangeRateHelper;
-use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Cache;
-use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
-use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
-use Illuminate\Support\Collection;
-use Carbon\CarbonInterface;
-use BrightCreations\ExchangeRates\Models\CurrencyExchangeRateHistory;
-use BrightCreations\ExchangeRates\DTOs\ExchangeRatesDto;
-use BrightCreations\ExchangeRates\DTOs\HistoricalExchangeRatesDto;
-use BrightCreations\ExchangeRates\DTOs\HistoricalBaseCurrencyDto;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Config;
 
 /**
  * WorldBankExchangeRateApiService is a service that provides exchange rate data from the World Bank Exchange Rate API.
- * 
- * @package BrightCreations\ExchangeRates\Concretes
+ *
  * @author Bright Creations <kareem.shaaban@brightcreations.com>
  * @license MIT
- * 
+ *
  * Example response for `GET https://api.worldbank.org/v2/country/all/indicator/PA.NUS.FCRF?date=2024&format=json&per_page=1000` endpoint:
  * ```json
 [
@@ -67,7 +66,9 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
         WorldBankExchangeRateHelper;
 
     private const INDICATOR_CODE = 'PA.NUS.FCRF';
+
     private const PER_PAGE = 1000;
+
     private const CACHE_TTL = 86400; // 24 hours (daily data from World Bank)
 
     public function __construct(
@@ -76,15 +77,15 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
     ) {
         $this->http->baseUrl(Config::get('exchange-rates.services.world_bank_exchange_rate.base_url'))
             ->withHeaders([
-                'Accept' => 'application/json'
+                'Accept' => 'application/json',
             ])
             ->throw();
     }
 
     /**
      * Fetch World Bank data for a specific year with caching.
-     * 
-     * @param int $year The year to fetch data for
+     *
+     * @param  int  $year  The year to fetch data for
      * @return array The World Bank API response
      */
     private function fetchWorldBankData(int $year): array
@@ -104,6 +105,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
                 // Fetch all pages
                 $data = $this->fetchAllPages($data, function (int $page) use ($indicator, $year, $perPage) {
                     $response = $this->http->get("/country/all/indicator/$indicator?date=$year&format=json&per_page=$perPage&page=$page");
+
                     return $response->json();
                 });
             }
@@ -115,8 +117,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
     /**
      * Store exchange rates in the database
      *
-     * @param string $currency_code
-     * 
+     *
      * @return Collection<CurrencyExchangeRate>
      */
     public function storeExchangeRates(string $currency_code): Collection
@@ -133,6 +134,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
 
         if (empty($exchangeRates)) {
             logger()->warning("No exchange rates found for currency {$currency_code} from World Bank");
+
             return collect();
         }
 
@@ -162,10 +164,6 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
 
     /**
      * Get exchange rates from the database
-     *
-     * @param string $currency_code
-     * 
-     * @return Collection
      */
     public function getExchangeRates(string $currency_code): Collection
     {
@@ -174,8 +172,6 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
 
     /**
      * Get all exchange rates from the database
-     * 
-     * @return Collection
      */
     public function getAllExchangeRates(): Collection
     {
@@ -186,9 +182,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
      * Store historical exchange rates in the database
      * Note: World Bank provides yearly data, so we use the year from the date_time
      *
-     * @param string $currency_code
-     * @param CarbonInterface $date_time
-     * 
+     *
      * @return Collection<CurrencyExchangeRateHistory>
      */
     public function storeHistoricalExchangeRates(string $currency_code, CarbonInterface $date_time): Collection
@@ -205,6 +199,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
 
         if (empty($exchangeRates)) {
             logger()->warning("No historical exchange rates found for currency {$currency_code} from World Bank for year {$year}");
+
             return collect();
         }
 
@@ -232,9 +227,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
     /**
      * Get historical exchange rates from the database
      *
-     * @param string $currency_code
-     * @param CarbonInterface $date_time
-     * 
+     *
      * @return Collection<CurrencyExchangeRateHistory>
      */
     public function getHistoricalExchangeRates(string $currency_code, CarbonInterface $date_time): Collection
@@ -244,12 +237,6 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
 
     /**
      * Get a specific historical exchange rate from the database
-     *
-     * @param string $currency_code
-     * @param string $target_currency_code
-     * @param CarbonInterface $date_time
-     * 
-     * @return CurrencyExchangeRateHistory
      */
     public function getHistoricalExchangeRate(string $currency_code, string $target_currency_code, CarbonInterface $date_time): CurrencyExchangeRateHistory
     {
@@ -260,8 +247,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
      * Store exchange rates for multiple currencies
      * This is optimized to fetch World Bank data once and compute rates for all currencies
      *
-     * @param array $currencies_codes
-     * 
+     *
      * @return Collection<CurrencyExchangeRate>
      */
     public function storeBulkExchangeRatesForMultipleCurrencies(array $currencies_codes): Collection
@@ -277,7 +263,8 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
         $multiBaseRates = $this->extractExchangeRatesForMultipleCurrencies($currencies_codes, $worldBankData);
 
         if (empty($multiBaseRates)) {
-            logger()->warning("No exchange rates found for currencies from World Bank");
+            logger()->warning('No exchange rates found for currencies from World Bank');
+
             return collect();
         }
 
@@ -302,14 +289,14 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
         foreach ($dtos as $dto) {
             $data->push(CurrencyExchangeRate::constructFromExchangeRatesDto($dto));
         }
+
         return $data->flatten()->groupBy('base_currency_code');
     }
 
     /**
      * Store historical exchange rates for multiple currencies
      *
-     * @param HistoricalBaseCurrencyDto[] $historical_base_currencies
-     * 
+     * @param  HistoricalBaseCurrencyDto[]  $historical_base_currencies
      * @return Collection<CurrencyExchangeRateHistory>
      */
     public function storeBulkHistoricalExchangeRatesForMultipleCurrencies(array $historical_base_currencies): Collection
@@ -335,7 +322,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
 
             // Extract currency codes
             $currencyCodes = array_map(
-                fn($hbc) => $hbc->getBaseCurrencyCode(),
+                fn ($hbc) => $hbc->getBaseCurrencyCode(),
                 $historicalCurrencies
             );
 
@@ -348,7 +335,8 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
         }
 
         if (empty($historicalDtos)) {
-            logger()->warning("No historical exchange rates found from World Bank");
+            logger()->warning('No historical exchange rates found from World Bank');
+
             return collect();
         }
 
@@ -360,6 +348,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
         foreach ($historicalDtos as $dto) {
             $data->push(CurrencyExchangeRateHistory::constructFromHistoricalExchangeRatesDto($dto));
         }
-        return $data->flatten()->groupBy(['base_currency_code', fn($item) => $item->date_time->format('Y-m-d')]);
+
+        return $data->flatten()->groupBy(['base_currency_code', fn ($item) => $item->date_time->format('Y-m-d')]);
     }
 }

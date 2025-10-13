@@ -22,11 +22,10 @@ use Illuminate\Support\Facades\Config;
 
 /**
  * OpenExchangeRateService is a service that provides exchange rate data from the Open Exchange Rates API.
- * 
- * @package BrightCreations\ExchangeRates\Concretes
+ *
  * @author Bright Creations <kareem.shaaban@brightcreations.com>
  * @license MIT
- * 
+ *
  * Example response for `GET https://openexchangerates.org/api/latest.json?app_id=YOUR-APP-ID` endpoint:
  * ```json
 {
@@ -41,7 +40,7 @@ use Illuminate\Support\Facades\Config;
     }
 }
  * ```
- * 
+ *
  * Example response for `GET https://openexchangerates.org/api/historical/2020-01-01.json?app_id=YOUR-APP-ID&base=USD` endpoint:
  * ```json
 {
@@ -69,7 +68,7 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
         $this->http->baseUrl(Config::get('exchange-rates.services.open_exchange_rate.base_url'))
             ->withHeaders([
                 'Accept' => 'application/json',
-                'Authorization' => 'Token ' . Config::get('exchange-rates.services.open_exchange_rate.app_id')
+                'Authorization' => 'Token '.Config::get('exchange-rates.services.open_exchange_rate.app_id'),
             ])
             ->throw();
     }
@@ -77,8 +76,7 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
     /**
      * Store exchange rates in the database
      *
-     * @param string $currency_code
-     * 
+     *
      * @return Collection<CurrencyExchangeRate>
      */
     public function storeExchangeRates(string $currency_code): Collection
@@ -110,10 +108,6 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
 
     /**
      * Get exchange rates from the database
-     *
-     * @param string $currency_code
-     * 
-     * @return Collection
      */
     public function getExchangeRates(string $currency_code): Collection
     {
@@ -122,8 +116,6 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
 
     /**
      * Get all exchange rates from the database
-     * 
-     * @return Collection
      */
     public function getAllExchangeRates(): Collection
     {
@@ -133,9 +125,7 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
     /**
      * Store historical exchange rates in the database
      *
-     * @param string $currency_code
-     * @param CarbonInterface $date_time
-     * 
+     *
      * @return Collection<CurrencyExchangeRateHistory>
      */
     public function storeHistoricalExchangeRates(string $currency_code, CarbonInterface $date_time): Collection
@@ -169,9 +159,7 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
     /**
      * Get historical exchange rates from the database
      *
-     * @param string $currency_code
-     * @param CarbonInterface $date_time
-     * 
+     *
      * @return Collection<CurrencyExchangeRateHistory>
      */
     public function getHistoricalExchangeRates(string $currency_code, CarbonInterface $date_time): Collection
@@ -180,17 +168,12 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
         if ($historicalExchangeRates->isEmpty()) {
             return $this->storeHistoricalExchangeRates($currency_code, $date_time);
         }
+
         return $historicalExchangeRates;
     }
 
     /**
      * Get a specific historical exchange rate from the database
-     *
-     * @param string $currency_code
-     * @param string $target_currency_code
-     * @param CarbonInterface $date_time
-     * 
-     * @return CurrencyExchangeRateHistory
      */
     public function getHistoricalExchangeRate(string $currency_code, string $target_currency_code, CarbonInterface $date_time): CurrencyExchangeRateHistory
     {
@@ -206,7 +189,6 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
     /**
      * Store exchange rates for multiple currencies
      *
-     * @param array $currencies_codes
      *
      * @return Collection<CurrencyExchangeRate>
      */
@@ -221,6 +203,7 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
                 });
                 $responses->push($response);
             }
+
             return $responses;
         });
 
@@ -248,14 +231,14 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
         foreach ($dtos as $dto) {
             $data->push(CurrencyExchangeRate::constructFromExchangeRatesDto($dto));
         }
+
         return $data->flatten()->groupBy('base_currency_code');
     }
 
     /**
      * Store historical exchange rates for multiple currencies
      *
-     * @param HistoricalBaseCurrencyDto[] $historical_base_currencies
-     *
+     * @param  HistoricalBaseCurrencyDto[]  $historical_base_currencies
      * @return Collection<CurrencyExchangeRateHistory>
      */
     public function storeBulkHistoricalExchangeRatesForMultipleCurrencies(array $historical_base_currencies): Collection
@@ -270,10 +253,12 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
                     $year = $date_time->format('Y');
                     $month = $date_time->format('m');
                     $day = $date_time->format('d');
+
                     return $this->collectResponse($this->http->get("/historical/$year-$month-$day.json?base=$base_currency_code"));
                 });
                 $responses->push($response);
             }
+
             return $responses;
         });
 
@@ -295,6 +280,7 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
         foreach ($historical_dtos as $dto) {
             $data->push(CurrencyExchangeRateHistory::constructFromHistoricalExchangeRatesDto($dto));
         }
+
         return $data->flatten()->groupBy(['base_currency_code', fn ($item) => $item->date_time->format('Y-m-d')]);
     }
 }

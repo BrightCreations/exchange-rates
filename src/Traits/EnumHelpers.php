@@ -35,8 +35,6 @@ trait EnumHelpers
      *     'value2' => 'name2',
      *     ...
      * ]
-     *
-     * @return array
      */
     public static function array(): array
     {
@@ -46,8 +44,7 @@ trait EnumHelpers
     /**
      * Search for an enum value or name and return the matching case instance.
      *
-     * @param string|int $type
-     * @return static|null
+     * @param  string|int  $type
      */
     public static function search($type): ?static
     {
@@ -56,6 +53,7 @@ trait EnumHelpers
                 return $case;
             }
         }
+
         return null;
     }
 
@@ -66,9 +64,10 @@ trait EnumHelpers
      * statically as a method. If the method name matches an enum case name, the corresponding
      * case value is returned. If no matching case is found, an Exception is thrown.
      *
-     * @param string $method The name of the method being called, expected to match a case name.
-     * @param array $args The arguments passed to the method, not used in this implementation.
+     * @param  string  $method  The name of the method being called, expected to match a case name.
+     * @param  array  $args  The arguments passed to the method, not used in this implementation.
      * @return mixed The value of the matching enum case.
+     *
      * @throws Exception If no matching enum case is found for the given method name.
      */
     public static function __callStatic($method, $args)
@@ -99,5 +98,4 @@ trait EnumHelpers
             )
         );
     }
-
 }

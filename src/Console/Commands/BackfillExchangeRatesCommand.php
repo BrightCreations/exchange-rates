@@ -2,9 +2,9 @@
 
 namespace BrightCreations\ExchangeRates\Console\Commands;
 
+use BrightCreations\ExchangeRates\Concretes\FallbackExchangeRateService;
 use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
 use BrightCreations\ExchangeRates\Contracts\HistoricalSupportExchangeRateServiceInterface;
-use BrightCreations\ExchangeRates\Concretes\FallbackExchangeRateService;
 use BrightCreations\ExchangeRates\DTOs\HistoricalBaseCurrencyDto;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -46,19 +46,21 @@ class BackfillExchangeRatesCommand extends Command
         // Validate years
         if ($startYear > $endYear) {
             $this->error('Start year cannot be greater than end year');
+
             return self::FAILURE;
         }
 
         $this->info("📅 Backfilling from {$startYear} to {$endYear}");
-        $this->info("💱 Currencies: " . implode(', ', $currencies));
+        $this->info('💱 Currencies: '.implode(', ', $currencies));
 
         // Determine service to use
         $service = $specificService
             ? app($specificService)
             : $exchangeRateService;
 
-        if (!($service instanceof HistoricalSupportExchangeRateServiceInterface)) {
+        if (! ($service instanceof HistoricalSupportExchangeRateServiceInterface)) {
             $this->error('Selected service does not support historical exchange rates');
+
             return self::FAILURE;
         }
 
@@ -68,10 +70,10 @@ class BackfillExchangeRatesCommand extends Command
 
         if ($service instanceof FallbackExchangeRateService) {
             $fallbackOrder = array_map(
-                fn($class) => class_basename($class),
+                fn ($class) => class_basename($class),
                 $service->getFallbackServices()
             );
-            $this->info("🔄 Fallback order: " . implode(' → ', $fallbackOrder));
+            $this->info('🔄 Fallback order: '.implode(' → ', $fallbackOrder));
         }
 
         // Build historical DTOs for all years
@@ -99,12 +101,12 @@ class BackfillExchangeRatesCommand extends Command
         $startTime = microtime(true);
 
         // Process in batches by year for efficiency
-        $batchedByYear = collect($historicalDtos)->groupBy(fn($dto) => $dto->getDateTime()->year);
+        $batchedByYear = collect($historicalDtos)->groupBy(fn ($dto) => $dto->getDateTime()->year);
 
         foreach ($batchedByYear as $year => $yearDtos) {
             try {
                 Log::info("Backfilling exchange rates for year {$year}", [
-                    'currencies' => array_map(fn($dto) => $dto->getBaseCurrencyCode(), $yearDtos->toArray()),
+                    'currencies' => array_map(fn ($dto) => $dto->getBaseCurrencyCode(), $yearDtos->toArray()),
                     'service' => $serviceName,
                 ]);
 
@@ -122,7 +124,7 @@ class BackfillExchangeRatesCommand extends Command
                 $progressBar->advance(count($yearDtos));
 
                 Log::error("Failed to backfill year {$year}: {$e->getMessage()}", [
-                    'currencies' => array_map(fn($dto) => $dto->getBaseCurrencyCode(), $yearDtos->toArray()),
+                    'currencies' => array_map(fn ($dto) => $dto->getBaseCurrencyCode(), $yearDtos->toArray()),
                     'error' => $e->getMessage(),
                 ]);
 

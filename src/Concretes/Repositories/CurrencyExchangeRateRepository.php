@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 
 class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryInterface
 {
-
     public function updateExchangeRates(string $base_currency_code, array $exchange_rates): bool
     {
         $dataToInsert = [];
@@ -24,6 +23,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 'last_update_date' => Carbon::now(),
             ];
         }
+
         return DB::table(CurrencyExchangeRate::$tablename)->upsert(
             $dataToInsert,
             ['base_currency_code', 'target_currency_code'],
@@ -60,11 +60,11 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
         $dataToInsert = [];
         foreach ($exchange_rates as $code => $rate) {
             $dataToInsert[] = [
-                'base_currency_code'    => $base_currency_code,
-                'target_currency_code'  => $code,
-                'exchange_rate'         => $rate,
-                'date_time'             => $date_time,
-                'last_update_date'      => Carbon::now(),
+                'base_currency_code' => $base_currency_code,
+                'target_currency_code' => $code,
+                'exchange_rate' => $rate,
+                'date_time' => $date_time,
+                'last_update_date' => Carbon::now(),
             ];
         }
 
@@ -136,7 +136,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
 
     public function getBulkExchangeRate(array $currencies_pairs): Collection
     {
-        $currencies_pairs_strings = array_map(fn($currencies_pair) => (string) $currencies_pair, $currencies_pairs);
+        $currencies_pairs_strings = array_map(fn ($currencies_pair) => (string) $currencies_pair, $currencies_pairs);
         $currencies_pairs_strings_unique = array_unique($currencies_pairs_strings);
 
         $currenciesPairRaw = DB::raw(
@@ -144,6 +144,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 ? "(base_currency_code || '_' || target_currency_code) as currencies_pair"
                 : "CONCAT(base_currency_code, '_', target_currency_code) as currencies_pair"
         );
+
         return CurrencyExchangeRate::select('*', $currenciesPairRaw)
             ->whereIn('currencies_pair', $currencies_pairs_strings_unique)
             ->get()
@@ -158,7 +159,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
 
     public function getBulkHistoricalExchangeRates(array $historical_base_currencies): Collection
     {
-        $historical_base_currencies_strings = array_map(fn($historical_base_currency) => (string) $historical_base_currency, $historical_base_currencies);
+        $historical_base_currencies_strings = array_map(fn ($historical_base_currency) => (string) $historical_base_currency, $historical_base_currencies);
         $historical_base_currencies_strings_unique = array_unique($historical_base_currencies_strings);
 
         $historicalBaseCurrencyRaw = DB::raw(
@@ -166,6 +167,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 ? "(base_currency_code || '_' || strftime('%Y-%m-%d', date_time)) as historical_base_currency"
                 : "CONCAT(base_currency_code, '_', DATE_FORMAT(date_time, '%Y-%m-%d')) as historical_base_currency"
         );
+
         return CurrencyExchangeRateHistory::select(
             '*',
             $historicalBaseCurrencyRaw
@@ -186,7 +188,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
 
     public function getBulkHistoricalExchangeRate(array $historical_currencies_pairs): Collection
     {
-        $historical_currencies_pairs_strings = array_map(fn($historical_currencies_pair) => (string) $historical_currencies_pair, $historical_currencies_pairs);
+        $historical_currencies_pairs_strings = array_map(fn ($historical_currencies_pair) => (string) $historical_currencies_pair, $historical_currencies_pairs);
         $historical_currencies_pairs_strings_unique = array_unique($historical_currencies_pairs_strings);
 
         $historicalCurrenciesPairRaw = DB::raw(
@@ -194,6 +196,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 ? "(base_currency_code || '_' || target_currency_code || '_' || strftime('%Y-%m-%d', date_time)) as historical_currencies_pair"
                 : "CONCAT(base_currency_code, '_', target_currency_code, '_', DATE_FORMAT(date_time, '%Y-%m-%d')) as historical_currencies_pair"
         );
+
         return CurrencyExchangeRateHistory::select('*', $historicalCurrenciesPairRaw)
             ->whereIn('historical_currencies_pair', $historical_currencies_pairs_strings_unique)
             ->get()

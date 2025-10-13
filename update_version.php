@@ -26,7 +26,7 @@ if ($data === null) {
 $data['version'] = $newVersion;
 
 // Encode JSON (pretty print, unescaped slashes)
-$newComposerJson = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n";
+$newComposerJson = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)."\n";
 if ($newComposerJson === false) {
     fwrite(STDERR, "Failed to encode composer.json\n");
     exit(1);
@@ -48,7 +48,7 @@ if ($ret1 !== 0) {
 }
 
 $commitMsg = "Bump version to $newVersion";
-exec('git commit -m "' . addslashes($commitMsg) . '"', $output, $ret2);
+exec('git commit -m "'.addslashes($commitMsg).'"', $output, $ret2);
 if ($ret2 !== 0) {
     fwrite(STDERR, "git commit failed\n");
     exit(1);
@@ -61,13 +61,13 @@ if ($ret3 !== 0) {
 }
 
 // Git tag and push tag
-exec('git tag ' . escapeshellarg($newVersion), $output, $ret4);
+exec('git tag '.escapeshellarg($newVersion), $output, $ret4);
 if ($ret4 !== 0) {
     fwrite(STDERR, "git tag failed\n");
     exit(1);
 }
 
-exec('git push origin ' . escapeshellarg($newVersion), $output, $ret5);
+exec('git push origin '.escapeshellarg($newVersion), $output, $ret5);
 if ($ret5 !== 0) {
     fwrite(STDERR, "git push origin $newVersion failed\n");
     exit(1);
