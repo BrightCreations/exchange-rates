@@ -1,0 +1,79 @@
+#!/usr/bin/env php
+<?php
+
+// migrate.php - Run your package migrations using in-memory SQLite via Testbench
+
+require __DIR__ . '/vendor/autoload.php';
+
+// --- Load .env so DB_CONNECTION etc. are set ---
+if (class_exists(\Dotenv\Dotenv::class)) {
+    \Dotenv\Dotenv::createImmutable(__DIR__)->safeLoad();
+}
+
+// --- Bootstrap Testbench app ---
+$appBootstrapPath = __DIR__ . '/vendor/orchestra/testbench-core/laravel/bootstrap/app.php';
+if (! file_exists($appBootstrapPath)) {
+    fwrite(STDERR, "ERROR: Testbench bootstrap not found at $appBootstrapPath\n");
+    exit(1);
+}
+$app = require $appBootstrapPath;
+if (! $app || ! method_exists($app, 'make')) {
+    fwrite(STDERR, "ERROR: Invalid Laravel application returned.\n");
+    exit(1);
+}
+
+// --- Ensure correct base and vendor paths ---
+if (method_exists($app, 'setBasePath')) {
+    $app->setBasePath(__DIR__);
+}
+$app->instance('path.vendor', __DIR__ . '/vendor');
+
+// --- Register your package provider ---
+$provider = \BrightCreations\ExchangeRates\ExchangeRatesServiceProvider::class;
+if (class_exists($provider)) {
+    $app->register($provider);
+}
+
+// --- Bootstrap Laravel kernel (loads DB + migrations) ---
+$kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+$kernel->bootstrap();
+
+// --- Resolve migration repository and run the migrator ---
+$artisan = $app->make(Illuminate\Contracts\Console\Kernel::class);
+
+// Path to your package’s migrations
+$migrationsPath = __DIR__ . '/src/Database/Migrations';
+
+if (! is_dir($migrationsPath)) {
+    fwrite(STDERR, "ERROR: Migrations path not found: $migrationsPath\n");
+    exit(1);
+}
+
+// storage directory
+if (!is_dir(__DIR__ . '/storage')) {
+    if (!mkdir(__DIR__ . '/storage', 0777, true) && !is_dir(__DIR__ . '/storage')) {
+        fwrite(STDERR, "ERROR: Failed to create storage directory.\n");
+        exit(1);
+    }
+}
+
+// database file
+$sqlitePath = __DIR__ . '/storage/database.sqlite';
+if (!file_exists($sqlitePath)) {
+    if (false === touch($sqlitePath)) {
+        fwrite(STDERR, "ERROR: Failed to create SQLite database file at $sqlitePath\n");
+        exit(1);
+    }
+}
+
+fwrite(STDOUT, "Running migrations from: $migrationsPath\n");
+
+$exitCode = $artisan->call('migrate', [
+    '--path' => str_replace(base_path() . '/', '', $migrationsPath),
+    '--database' => 'sqlite',
+    '--force' => true,
+]);
+
+echo $artisan->output();
+
+exit($exitCode);

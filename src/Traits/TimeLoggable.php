@@ -23,6 +23,8 @@ trait TimeLoggable
         Log::debug("[BrightCreations\ExchangeRates] >>>>> Time: ".$time);
         if ($result instanceof Response) {
             Log::debug("[BrightCreations\ExchangeRates] >>>>> Response: ".json_encode($result->json()));
+        } elseif (is_array($result)) {
+            Log::debug("[BrightCreations\ExchangeRates] >>>>> Response: ".json_encode($result));
         } else {
             Log::debug("[BrightCreations\ExchangeRates] >>>>> Closure Return: ".$result);
         }

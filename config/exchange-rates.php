@@ -13,8 +13,8 @@ return [
     // Fallback order for exchange rate services
     // The FallbackExchangeRateService will try each service in this order until one succeeds
     'fallback_order' => [
-        ExchangeRateApiService::class,
-        OpenExchangeRateService::class,
+        // ExchangeRateApiService::class,
+        // OpenExchangeRateService::class,
         WorldBankExchangeRateApiService::class,
     ],
 

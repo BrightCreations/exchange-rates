@@ -1,0 +1,112 @@
+#!/usr/bin/env php
+<?php
+// tinker.php - Testbench + Tinker launcher for package development (fixes autoload path)
+
+require __DIR__ . '/vendor/autoload.php';
+
+// --- Load .env into PHP environment BEFORE bootstrapping the app ----------------
+$dotenvPath = __DIR__;
+$dotenvFile = $dotenvPath . '/.env';
+
+// If vlucas/phpdotenv is available, load the .env into getenv()/$_ENV so Laravel's config() reads them
+if (class_exists(\Dotenv\Dotenv::class)) {
+    try {
+        // safeLoad won't throw if file missing; load() will throw on parse errors
+        \Dotenv\Dotenv::createImmutable($dotenvPath)->safeLoad();
+        // Optionally, you can call ->required('APP_KEY')->notEmpty(); to enforce keys
+    } catch (Throwable $e) {
+        fwrite(STDERR, "Warning: .env load failed: " . $e->getMessage() . PHP_EOL);
+    }
+} else {
+    fwrite(STDOUT, "vlucas/phpdotenv not installed; skipping .env load. Install it or export env vars manually.\n");
+}
+// ---------------------------------------------------------------------------------
+
+$appBootstrapPath = __DIR__ . '/vendor/orchestra/testbench-core/laravel/bootstrap/app.php';
+// fwrite(STDOUT, "Checking Testbench bootstrap path: $appBootstrapPath\n");
+
+if (! file_exists($appBootstrapPath)) {
+    fwrite(STDERR, "ERROR: Testbench bootstrap not found at: $appBootstrapPath\n");
+    fwrite(STDERR, "Run `composer install` and ensure orchestra/testbench is installed.\n");
+    exit(1);
+}
+
+// bootstrap application
+$app = require $appBootstrapPath;
+
+if (! $app || ! method_exists($app, 'make')) {
+    fwrite(STDERR, "ERROR: Bootstrap did not return an Illuminate application. Got: " . gettype($app) . PHP_EOL);
+    exit(1);
+}
+
+// fwrite(STDOUT, "Bootstrap succeeded, application class: " . get_class($app) . PHP_EOL);
+
+// IMPORTANT: set the app base path to your package root so base_path('vendor/...') resolves correctly
+if (method_exists($app, 'setBasePath')) {
+    $app->setBasePath(__DIR__);
+    $app->useStoragePath(__DIR__ . '/storage');
+    // fwrite(STDOUT, "Set application base path to package root: " . __DIR__ . PHP_EOL);
+} else {
+    // fwrite(STDOUT, "WARNING: Application does not support setBasePath().\n");
+}
+
+// Also bind the vendor path used by some internals (this makes vendor_path() return package/vendor)
+$app->instance('path.vendor', __DIR__ . '/vendor');
+// fwrite(STDOUT, "Bound path.vendor to: " . __DIR__ . '/vendor' . PHP_EOL);
+
+// Optionally register your package ServiceProvider AFTER base paths are fixed.
+// If your provider expects fully-bootstrapped services, you can register it after kernel bootstrap.
+$provider = \BrightCreations\ExchangeRates\ExchangeRatesServiceProvider::class;
+if (class_exists($provider)) {
+    try {
+        $app->register($provider);
+        // fwrite(STDOUT, "Registered provider: $provider\n");
+    } catch (Throwable $e) {
+        fwrite(STDERR, "WARNING: registering provider threw: " . $e->getMessage() . PHP_EOL);
+        fwrite(STDERR, "Continuing — you may register the provider after kernel bootstrap.\n");
+    }
+} else {
+    // fwrite(STDOUT, "Provider $provider not found — continuing without explicit registration.\n");
+}
+
+// Bootstrap kernel (loads config, providers, facades)
+try {
+    $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+    $kernel->bootstrap();
+    // fwrite(STDOUT, "Kernel bootstrapped.\n");
+} catch (Throwable $e) {
+    fwrite(STDERR, "ERROR: Kernel bootstrap failed: " . $e->getMessage() . PHP_EOL);
+    fwrite(STDERR, $e->getTraceAsString() . PHP_EOL);
+    exit(1);
+}
+
+// Build the Tinker command and inject the application/container
+$command = new Laravel\Tinker\Console\TinkerCommand();
+
+if (method_ exists($command, 'setLaravel')) {
+    $command->setLaravel($app);
+}
+if (method_exists($command, 'setContainer')) {
+    $command->setContainer($app);
+}
+
+// Create Symfony Console Application, attach the command and run it
+$symfonyApp = new Symfony\Component\Console\Application('Package Tinker', $app->version() ?? '0.0.0');
+
+try {
+    $symfonyApp->add($command);
+    $symfonyApp->setDefaultCommand($command->getName(), true);
+
+    // Let exceptions bubble so we see the full trace if something goes wrong
+    $symfonyApp->setCatchExceptions(false);
+
+    $input  = new Symfony\Component\Console\Input\ArgvInput();
+    $output = new Symfony\Component\Console\Output\ConsoleOutput();
+
+    $symfonyApp->run($input, $output);
+
+} catch (Throwable $e) {
+    fwrite(STDERR, "ERROR running console application: " . $e->getMessage() . PHP_EOL);
+    fwrite(STDERR, $e->getTraceAsString() . PHP_EOL);
+    exit(1);
+}
