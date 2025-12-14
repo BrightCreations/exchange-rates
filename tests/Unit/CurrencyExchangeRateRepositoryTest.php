@@ -390,11 +390,11 @@ describe('Retrieve single historical exchange rate for a pair and bulk historica
         // Act
         $result = $this->repository->getBulkHistoricalExchangeRate($pairs);
 
-        // Assert
-        $this->assertCount(4, $result);
-        $this->assertEquals(0.82, $result['USD_EUR_2023-01-01'][0]->exchange_rate);
-        $this->assertEquals(109.0, $result['USD_JPY_2023-01-01'][0]->exchange_rate);
-        $this->assertEquals(1.18, $result['EUR_USD_2023-01-02'][0]->exchange_rate);
-        $this->assertEquals(130.0, $result['EUR_JPY_2023-01-02'][0]->exchange_rate);
+        // Assert - result is now nested: base_currency_code -> target_currency_code -> date
+        $this->assertCount(2, $result); // USD and EUR
+        $this->assertEquals(0.82, $result['USD']['EUR']['2023-01-01'][0]->exchange_rate);
+        $this->assertEquals(109.0, $result['USD']['JPY']['2023-01-01'][0]->exchange_rate);
+        $this->assertEquals(1.18, $result['EUR']['USD']['2023-01-02'][0]->exchange_rate);
+        $this->assertEquals(130.0, $result['EUR']['JPY']['2023-01-02'][0]->exchange_rate);
     });
 });

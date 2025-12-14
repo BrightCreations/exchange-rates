@@ -218,6 +218,10 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
         return CurrencyExchangeRateHistory::select('*', $historicalCurrenciesPairRaw)
             ->whereIn($historicalCurrenciesPairWhereRaw, $historical_currencies_pairs_strings_unique)
             ->get()
-            ->groupBy('historical_currencies_pair');
+            ->groupBy([
+                'base_currency_code',
+                fn ($item) => $item->target_currency_code,
+                fn ($item) => Carbon::parse($item->date_time)->format('Y-m-d')
+            ]);
     }
 }
