@@ -19,6 +19,7 @@ class CurrencyExchangeRate extends Model
         'base_currency_code',
         'target_currency_code',
         'exchange_rate',
+        'provider',
         'last_update_date',
     ];
 

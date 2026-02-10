@@ -96,11 +96,13 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
         $this->currencyExchangeRateRepository->updateExchangeRates(
             $response->get('base_code'),
             $response->get('conversion_rates'),
+            $this->getProviderName(),
         );
         $this->currencyExchangeRateRepository->updateExchangeRatesHistory(
             $response->get('base_code'),
             $response->get('conversion_rates'),
             Carbon::createFromTimestamp($response->get('time_last_update_unix')),
+            $this->getProviderName(),
         );
 
         // Construct models
@@ -149,8 +151,8 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
         }
 
         // Update the database
-        $this->currencyExchangeRateRepository->updateBulkExchangeRates($dtos);
-        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historical_dtos);
+        $this->currencyExchangeRateRepository->updateBulkExchangeRates($dtos, $this->getProviderName());
+        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historical_dtos, $this->getProviderName());
 
         // Construct models
         $data = collect();
@@ -198,6 +200,7 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
             $response->get('base_code'),
             $response->get('conversion_rates'),
             $date_time,
+            $this->getProviderName(),
         );
 
         // Construct models
@@ -249,7 +252,7 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
         }
 
         // Update the database
-        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historical_dtos);
+        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historical_dtos, $this->getProviderName());
 
         // Construct models
         $data = collect();

@@ -21,26 +21,26 @@ interface CurrencyExchangeRateRepositoryInterface
     /**
      * Update exchange rates in the database
      */
-    public function updateExchangeRates(string $base_currency_code, array $exchange_rates): bool;
+    public function updateExchangeRates(string $base_currency_code, array $exchange_rates, ?string $provider = null): bool;
 
     /**
      * Update bulk exchange rates in the database
      *
      * @param  ExchangeRatesDto[]  $exchange_rates
      */
-    public function updateBulkExchangeRates(array $exchange_rates): bool;
+    public function updateBulkExchangeRates(array $exchange_rates, ?string $provider = null): bool;
 
     /**
      * Update exchange rates history in the database
      */
-    public function updateExchangeRatesHistory(string $base_currency_code, array $exchange_rates, CarbonInterface $date_time): bool;
+    public function updateExchangeRatesHistory(string $base_currency_code, array $exchange_rates, CarbonInterface $date_time, ?string $provider = null): bool;
 
     /**
      * Update bulk exchange rates history in the database
      *
      * @param  HistoricalExchangeRatesDto[]  $historical_exchange_rates
      */
-    public function updateBulkExchangeRatesHistory(array $historical_exchange_rates): bool;
+    public function updateBulkExchangeRatesHistory(array $historical_exchange_rates, ?string $provider = null): bool;
 
     /**
      * Get all exchange rates from the database

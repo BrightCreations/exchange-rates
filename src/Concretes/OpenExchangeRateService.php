@@ -90,11 +90,13 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
         $this->currencyExchangeRateRepository->updateExchangeRates(
             $response->get('base'),
             $response->get('rates'),
+            $this->getProviderName(),
         );
         $this->currencyExchangeRateRepository->updateExchangeRatesHistory(
             $response->get('base'),
             $response->get('rates'),
             Carbon::createFromTimestamp($response->get('timestamp')),
+            $this->getProviderName(),
         );
 
         // Construct models
@@ -144,6 +146,7 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
             $response->get('base'),
             $response->get('rates'),
             $date_time,
+            $this->getProviderName(),
         );
 
         // Construct models
@@ -223,8 +226,8 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
         }
 
         // Update the database
-        $this->currencyExchangeRateRepository->updateBulkExchangeRates($dtos);
-        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historical_dtos);
+        $this->currencyExchangeRateRepository->updateBulkExchangeRates($dtos, $this->getProviderName());
+        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historical_dtos, $this->getProviderName());
 
         // Construct models
         $data = collect();
@@ -273,7 +276,7 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
         }
 
         // Update the database
-        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historical_dtos);
+        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historical_dtos, $this->getProviderName());
 
         // Construct models
         $data = collect();

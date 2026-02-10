@@ -146,11 +146,13 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
         $this->currencyExchangeRateRepository->updateExchangeRates(
             $currency_code,
             $exchangeRates,
+            $this->getProviderName(),
         );
         $this->currencyExchangeRateRepository->updateExchangeRatesHistory(
             $currency_code,
             $exchangeRates,
             $timestamp,
+            $this->getProviderName(),
         );
 
         // Construct models
@@ -212,6 +214,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
             $currency_code,
             $exchangeRates,
             $timestamp,
+            $this->getProviderName(),
         );
 
         // Construct models
@@ -281,8 +284,8 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
         }
 
         // Update the database
-        $this->currencyExchangeRateRepository->updateBulkExchangeRates($dtos);
-        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historicalDtos);
+        $this->currencyExchangeRateRepository->updateBulkExchangeRates($dtos, $this->getProviderName());
+        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historicalDtos, $this->getProviderName());
 
         // Construct models
         $data = collect();
@@ -341,7 +344,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
         }
 
         // Update the database
-        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historicalDtos);
+        $this->currencyExchangeRateRepository->updateBulkExchangeRatesHistory($historicalDtos, $this->getProviderName());
 
         // Construct models
         $data = collect();

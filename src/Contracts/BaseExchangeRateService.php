@@ -8,4 +8,12 @@ abstract class BaseExchangeRateService implements ExchangeRateServiceInterface
     {
         return $this instanceof HistoricalSupportExchangeRateServiceInterface;
     }
+
+    /**
+     * Get the provider name (short class name) for this service
+     */
+    protected function getProviderName(): string
+    {
+        return basename(str_replace('\\', '/', static::class));
+    }
 }

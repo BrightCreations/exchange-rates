@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryInterface
 {
-    public function updateExchangeRates(string $base_currency_code, array $exchange_rates): bool
+    public function updateExchangeRates(string $base_currency_code, array $exchange_rates, ?string $provider = null): bool
     {
         $dataToInsert = [];
         foreach ($exchange_rates as $code => $rate) {
@@ -20,6 +20,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 'base_currency_code' => $base_currency_code,
                 'target_currency_code' => $code,
                 'exchange_rate' => $rate,
+                'provider' => $provider,
                 'last_update_date' => Carbon::now(),
             ];
         }
@@ -27,11 +28,11 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
         return DB::table(CurrencyExchangeRate::$tablename)->upsert(
             $dataToInsert,
             ['base_currency_code', 'target_currency_code'],
-            ['exchange_rate', 'last_update_date'],
+            ['exchange_rate', 'provider', 'last_update_date'],
         );
     }
 
-    public function updateBulkExchangeRates(array $exchange_rates): bool
+    public function updateBulkExchangeRates(array $exchange_rates, ?string $provider = null): bool
     {
         $dataToInsert = [];
         foreach ($exchange_rates as $exchange_rate) {
@@ -43,6 +44,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                     'base_currency_code' => $exchange_rate->getBaseCurrencyCode(),
                     'target_currency_code' => $code,
                     'exchange_rate' => $rate,
+                    'provider' => $provider,
                     'last_update_date' => Carbon::now(),
                 ];
             }
@@ -51,11 +53,11 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
         return DB::table(CurrencyExchangeRate::$tablename)->upsert(
             $dataToInsert,
             ['base_currency_code', 'target_currency_code'],
-            ['exchange_rate', 'last_update_date'],
+            ['exchange_rate', 'provider', 'last_update_date'],
         );
     }
 
-    public function updateExchangeRatesHistory(string $base_currency_code, array $exchange_rates, CarbonInterface $date_time): bool
+    public function updateExchangeRatesHistory(string $base_currency_code, array $exchange_rates, CarbonInterface $date_time, ?string $provider = null): bool
     {
         $dataToInsert = [];
         foreach ($exchange_rates as $code => $rate) {
@@ -63,6 +65,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 'base_currency_code' => $base_currency_code,
                 'target_currency_code' => $code,
                 'exchange_rate' => $rate,
+                'provider' => $provider,
                 'date_time' => $date_time,
                 'last_update_date' => Carbon::now(),
             ];
@@ -77,12 +80,13 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
             ],
             [
                 'exchange_rate',
+                'provider',
                 'last_update_date',
             ]
         );
     }
 
-    public function updateBulkExchangeRatesHistory(array $historical_exchange_rates): bool
+    public function updateBulkExchangeRatesHistory(array $historical_exchange_rates, ?string $provider = null): bool
     {
         $dataToInsert = [];
         foreach ($historical_exchange_rates as $historical_exchange_rate) {
@@ -94,6 +98,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                     'base_currency_code' => $historical_exchange_rate->getBaseCurrencyCode(),
                     'target_currency_code' => $code,
                     'exchange_rate' => $rate,
+                    'provider' => $provider,
                     'date_time' => $historical_exchange_rate->getDateTime(),
                     'last_update_date' => Carbon::now(),
                 ];
@@ -109,6 +114,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
             ],
             [
                 'exchange_rate',
+                'provider',
                 'last_update_date',
             ]
         );

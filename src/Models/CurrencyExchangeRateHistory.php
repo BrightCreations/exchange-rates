@@ -19,6 +19,7 @@ class CurrencyExchangeRateHistory extends Model
         'base_currency_code',
         'target_currency_code',
         'exchange_rate',
+        'provider',
         'date_time',
         'last_update_date',
     ];
