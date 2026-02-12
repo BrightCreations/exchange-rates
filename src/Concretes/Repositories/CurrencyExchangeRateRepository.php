@@ -262,4 +262,52 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 fn ($item) => Carbon::parse($item->date_time)->format('Y-m-d')
             ]);
     }
+
+    /**
+     * Get the last historical rate on or before the given date for a currency pair.
+     */
+    public function getPreviousHistoricalRate(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): ?CurrencyExchangeRateHistory
+    {
+        return CurrencyExchangeRateHistory::where(compact('base_currency_code', 'target_currency_code'))
+            ->where('date_time', '<=', $target_date)
+            ->orderBy('date_time', 'desc')
+            ->first();
+    }
+
+    /**
+     * Get the first historical rate on or after the given date for a currency pair.
+     */
+    public function getNextHistoricalRate(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): ?CurrencyExchangeRateHistory
+    {
+        return CurrencyExchangeRateHistory::where(compact('base_currency_code', 'target_currency_code'))
+            ->where('date_time', '>=', $target_date)
+            ->orderBy('date_time', 'asc')
+            ->first();
+    }
+
+    /**
+     * Get the two historical exchange rate records that bound the requested date for a given currency pair.
+     *
+     * It will return at most two models (empty if not possible):
+     * - d1, r1: last rate on or before $target_date
+     * - d2, r2: first rate on or after $target_date
+     *
+     * If one of the bounds does not exist or both bounds are the same record, an empty collection is returned.
+     */
+    public function getBoundingHistoricalRates(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): Collection
+    {
+        $before = $this->getPreviousHistoricalRate($base_currency_code, $target_currency_code, $target_date);
+        $after = $this->getNextHistoricalRate($base_currency_code, $target_currency_code, $target_date);
+
+        if (! $before || ! $after) {
+            return collect();
+        }
+
+        // If both bounds resolve to the same underlying record, we don't have a proper interval
+        if ($before->is($after)) {
+            return collect();
+        }
+
+        return collect([$before, $after]);
+    }
 }

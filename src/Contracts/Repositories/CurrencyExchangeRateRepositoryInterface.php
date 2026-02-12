@@ -110,4 +110,27 @@ interface CurrencyExchangeRateRepositoryInterface
      * @return Collection<string, CurrencyExchangeRateHistory> The key is the currencies pair string in the format "BASE_TARGET_YYYY-MM-DD"
      */
     public function getBulkHistoricalExchangeRate(array $historical_currencies_pairs): Collection;
+
+    /**
+     * Get the last historical rate on or before the given date for a currency pair.
+     */
+    public function getPreviousHistoricalRate(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): ?CurrencyExchangeRateHistory;
+
+    /**
+     * Get the first historical rate on or after the given date for a currency pair.
+     */
+    public function getNextHistoricalRate(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): ?CurrencyExchangeRateHistory;
+
+    /**
+     * Get the two historical exchange rate records that bound the requested date for a given currency pair.
+     *
+     * It should return at most two models (empty if not possible):
+     * - d1, r1: last rate on or before $targetDate
+     * - d2, r2: first rate on or after $targetDate
+     *
+     * If one of the bounds does not exist or both bounds are the same record, an empty collection MUST be returned.
+     *
+     * @return Collection<CurrencyExchangeRateHistory>
+     */
+    public function getBoundingHistoricalRates(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): Collection;
 }
