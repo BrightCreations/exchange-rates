@@ -3,6 +3,7 @@
 namespace BrightCreations\ExchangeRates\Concretes\Repositories;
 
 use Brick\Math\BigDecimal;
+use Brick\Math\RoundingMode;
 use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRateHistory;
@@ -27,7 +28,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
             $dataToInsert[] = [
                 'base_currency_code' => $code,
                 'target_currency_code' => $base_currency_code,
-                'exchange_rate' => BigDecimal::of(1)->dividedBy(BigDecimal::of($rate))->__toString(),
+                'exchange_rate' => BigDecimal::of(1)->dividedBy(BigDecimal::of($rate), null, RoundingMode::DOWN)->__toString(),
                 'provider' => $provider,
                 'last_update_date' => Carbon::now(),
             ];
@@ -58,7 +59,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 $dataToInsert[] = [
                     'base_currency_code' => $code,
                     'target_currency_code' => $exchange_rate->getBaseCurrencyCode(),
-                    'exchange_rate' => BigDecimal::of(1)->dividedBy(BigDecimal::of($rate))->__toString(),
+                    'exchange_rate' => BigDecimal::of(1)->dividedBy(BigDecimal::of($rate), null, RoundingMode::DOWN)->__toString(),
                     'provider' => $provider,
                     'last_update_date' => Carbon::now(),
                 ];
@@ -87,7 +88,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
             $dataToInsert[] = [
                 'base_currency_code' => $code,
                 'target_currency_code' => $base_currency_code,
-                'exchange_rate' => BigDecimal::of(1)->dividedBy(BigDecimal::of($rate))->__toString(),
+                'exchange_rate' => BigDecimal::of(1)->dividedBy(BigDecimal::of($rate), null, RoundingMode::DOWN)->__toString(),
                 'provider' => $provider,
                 'date_time' => $date_time,
                 'last_update_date' => Carbon::now(),
@@ -128,7 +129,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 $dataToInsert[] = [
                     'base_currency_code' => $code,
                     'target_currency_code' => $historical_exchange_rate->getBaseCurrencyCode(),
-                    'exchange_rate' => BigDecimal::of(1)->dividedBy(BigDecimal::of($rate))->__toString(),
+                    'exchange_rate' => BigDecimal::of(1)->dividedBy(BigDecimal::of($rate), null, RoundingMode::DOWN)->__toString(),
                     'provider' => $provider,
                     'date_time' => $historical_exchange_rate->getDateTime(),
                     'last_update_date' => Carbon::now(),
