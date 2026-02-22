@@ -14,6 +14,26 @@ use Illuminate\Support\Facades\DB;
 
 class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryInterface
 {
+    /**
+     * Calculate the reversed exchange rate (1 / rate) with proper precision and rounding.
+     *
+     * @param string|float|int $rate The exchange rate to reverse
+     * @return string The reversed exchange rate as a string with 10 decimal places
+     * @throws \InvalidArgumentException If the rate is zero or invalid
+     */
+    private function calculateReversedRate($rate): string
+    {
+        $rateBigDecimal = BigDecimal::of($rate);
+
+        if ($rateBigDecimal->isZero()) {
+            throw new \InvalidArgumentException('Cannot calculate reversed rate: exchange rate cannot be zero');
+        }
+
+        return BigDecimal::of(1)
+            ->dividedBy($rateBigDecimal, 10, RoundingMode::HALF_UP)
+            ->__toString();
+    }
+
     public function updateExchangeRates(string $base_currency_code, array $exchange_rates, ?string $provider = null): bool
     {
         $dataToInsert = [];
@@ -28,7 +48,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
             $dataToInsert[] = [
                 'base_currency_code' => $code,
                 'target_currency_code' => $base_currency_code,
-                'exchange_rate' => BigDecimal::of(1)->dividedBy(BigDecimal::of($rate), null, RoundingMode::DOWN)->__toString(),
+                'exchange_rate' => $this->calculateReversedRate($rate),
                 'provider' => $provider,
                 'last_update_date' => Carbon::now(),
             ];
@@ -59,7 +79,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 $dataToInsert[] = [
                     'base_currency_code' => $code,
                     'target_currency_code' => $exchange_rate->getBaseCurrencyCode(),
-                    'exchange_rate' => BigDecimal::of(1)->dividedBy(BigDecimal::of($rate), null, RoundingMode::DOWN)->__toString(),
+                    'exchange_rate' => $this->calculateReversedRate($rate),
                     'provider' => $provider,
                     'last_update_date' => Carbon::now(),
                 ];
@@ -88,7 +108,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
             $dataToInsert[] = [
                 'base_currency_code' => $code,
                 'target_currency_code' => $base_currency_code,
-                'exchange_rate' => BigDecimal::of(1)->dividedBy(BigDecimal::of($rate), null, RoundingMode::DOWN)->__toString(),
+                'exchange_rate' => $this->calculateReversedRate($rate),
                 'provider' => $provider,
                 'date_time' => $date_time,
                 'last_update_date' => Carbon::now(),
@@ -129,7 +149,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 $dataToInsert[] = [
                     'base_currency_code' => $code,
                     'target_currency_code' => $historical_exchange_rate->getBaseCurrencyCode(),
-                    'exchange_rate' => BigDecimal::of(1)->dividedBy(BigDecimal::of($rate), null, RoundingMode::DOWN)->__toString(),
+                    'exchange_rate' => $this->calculateReversedRate($rate),
                     'provider' => $provider,
                     'date_time' => $historical_exchange_rate->getDateTime(),
                     'last_update_date' => Carbon::now(),
