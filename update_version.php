@@ -22,6 +22,13 @@ if ($data === null) {
     exit(1);
 }
 
+// Check if version is already the desired one
+$currentVersion = $data['version'] ?? null;
+if ($currentVersion === $newVersion) {
+    echo "composer.json is already at version $newVersion\n";
+    exit(0);
+}
+
 // Update version
 $data['version'] = $newVersion;
 
@@ -50,7 +57,7 @@ if ($ret1 !== 0) {
 $commitMsg = "Bump version to $newVersion";
 exec('git commit -m "'.addslashes($commitMsg).'"', $output, $ret2);
 if ($ret2 !== 0) {
-    fwrite(STDERR, "git commit failed\n");
+    fwrite(STDERR, "git commit failed $commitMsg\n");
     exit(1);
 }
 

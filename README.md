@@ -215,7 +215,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For support, please contact:
 
 - **Email**: kareem.shaaban@brightcreations.com
-- **Developer at**: DAZU
+- **Developer at**: DAZU DPN
 - **Company**: Bright Creations
 
 ---
