@@ -38,17 +38,23 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     {
         $dataToInsert = [];
         foreach ($exchange_rates as $code => $rate) {
+            $rateBigDecimal = BigDecimal::of($rate);
+
+            if ($rateBigDecimal->isZero()) {
+                continue;
+            }
+
             $dataToInsert[] = [
                 'base_currency_code' => $base_currency_code,
                 'target_currency_code' => $code,
-                'exchange_rate' => BigDecimal::of($rate)->__toString(),
+                'exchange_rate' => $rateBigDecimal->__toString(),
                 'provider' => $provider,
                 'last_update_date' => Carbon::now(),
             ];
             $dataToInsert[] = [
                 'base_currency_code' => $code,
                 'target_currency_code' => $base_currency_code,
-                'exchange_rate' => $this->calculateReversedRate($rate),
+                'exchange_rate' => $this->calculateReversedRate($rateBigDecimal),
                 'provider' => $provider,
                 'last_update_date' => Carbon::now(),
             ];
@@ -69,17 +75,23 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 throw new \InvalidArgumentException('Exchange rate must be an instance of \BrightCreations\ExchangeRates\Dtos\ExchangeRatesDto');
             }
             foreach ($exchange_rate->getExchangeRates() as $code => $rate) {
+                $rateBigDecimal = BigDecimal::of($rate);
+
+                if ($rateBigDecimal->isZero()) {
+                    continue;
+                }
+
                 $dataToInsert[] = [
                     'base_currency_code' => $exchange_rate->getBaseCurrencyCode(),
                     'target_currency_code' => $code,
-                    'exchange_rate' => BigDecimal::of($rate)->__toString(),
+                    'exchange_rate' => $rateBigDecimal->__toString(),
                     'provider' => $provider,
                     'last_update_date' => Carbon::now(),
                 ];
                 $dataToInsert[] = [
                     'base_currency_code' => $code,
                     'target_currency_code' => $exchange_rate->getBaseCurrencyCode(),
-                    'exchange_rate' => $this->calculateReversedRate($rate),
+                    'exchange_rate' => $this->calculateReversedRate($rateBigDecimal),
                     'provider' => $provider,
                     'last_update_date' => Carbon::now(),
                 ];
@@ -97,10 +109,16 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     {
         $dataToInsert = [];
         foreach ($exchange_rates as $code => $rate) {
+            $rateBigDecimal = BigDecimal::of($rate);
+
+            if ($rateBigDecimal->isZero()) {
+                continue;
+            }
+
             $dataToInsert[] = [
                 'base_currency_code' => $base_currency_code,
                 'target_currency_code' => $code,
-                'exchange_rate' => BigDecimal::of($rate)->__toString(),
+                'exchange_rate' => $rateBigDecimal->__toString(),
                 'provider' => $provider,
                 'date_time' => $date_time,
                 'last_update_date' => Carbon::now(),
@@ -108,7 +126,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
             $dataToInsert[] = [
                 'base_currency_code' => $code,
                 'target_currency_code' => $base_currency_code,
-                'exchange_rate' => $this->calculateReversedRate($rate),
+                'exchange_rate' => $this->calculateReversedRate($rateBigDecimal),
                 'provider' => $provider,
                 'date_time' => $date_time,
                 'last_update_date' => Carbon::now(),
@@ -138,10 +156,16 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 throw new \InvalidArgumentException('Historical exchange rate must be an instance of \BrightCreations\ExchangeRates\Dtos\HistoricalExchangeRatesDto');
             }
             foreach ($historical_exchange_rate->getExchangeRates() as $code => $rate) {
+                $rateBigDecimal = BigDecimal::of($rate);
+
+                if ($rateBigDecimal->isZero()) {
+                    continue;
+                }
+
                 $dataToInsert[] = [
                     'base_currency_code' => $historical_exchange_rate->getBaseCurrencyCode(),
                     'target_currency_code' => $code,
-                    'exchange_rate' => BigDecimal::of($rate)->__toString(),
+                    'exchange_rate' => $rateBigDecimal->__toString(),
                     'provider' => $provider,
                     'date_time' => $historical_exchange_rate->getDateTime(),
                     'last_update_date' => Carbon::now(),
@@ -149,7 +173,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 $dataToInsert[] = [
                     'base_currency_code' => $code,
                     'target_currency_code' => $historical_exchange_rate->getBaseCurrencyCode(),
-                    'exchange_rate' => $this->calculateReversedRate($rate),
+                    'exchange_rate' => $this->calculateReversedRate($rateBigDecimal),
                     'provider' => $provider,
                     'date_time' => $historical_exchange_rate->getDateTime(),
                     'last_update_date' => Carbon::now(),
