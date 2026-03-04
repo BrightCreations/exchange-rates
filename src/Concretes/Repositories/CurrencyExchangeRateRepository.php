@@ -51,13 +51,6 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 'provider' => $provider,
                 'last_update_date' => Carbon::now(),
             ];
-            $dataToInsert[] = [
-                'base_currency_code' => $code,
-                'target_currency_code' => $base_currency_code,
-                'exchange_rate' => $this->calculateReversedRate($rateBigDecimal),
-                'provider' => $provider,
-                'last_update_date' => Carbon::now(),
-            ];
         }
 
         return DB::table(CurrencyExchangeRate::$tablename)->upsert(
@@ -88,13 +81,6 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                     'provider' => $provider,
                     'last_update_date' => Carbon::now(),
                 ];
-                $dataToInsert[] = [
-                    'base_currency_code' => $code,
-                    'target_currency_code' => $exchange_rate->getBaseCurrencyCode(),
-                    'exchange_rate' => $this->calculateReversedRate($rateBigDecimal),
-                    'provider' => $provider,
-                    'last_update_date' => Carbon::now(),
-                ];
             }
         }
 
@@ -119,14 +105,6 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 'base_currency_code' => $base_currency_code,
                 'target_currency_code' => $code,
                 'exchange_rate' => $rateBigDecimal->__toString(),
-                'provider' => $provider,
-                'date_time' => $date_time,
-                'last_update_date' => Carbon::now(),
-            ];
-            $dataToInsert[] = [
-                'base_currency_code' => $code,
-                'target_currency_code' => $base_currency_code,
-                'exchange_rate' => $this->calculateReversedRate($rateBigDecimal),
                 'provider' => $provider,
                 'date_time' => $date_time,
                 'last_update_date' => Carbon::now(),
@@ -166,14 +144,6 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                     'base_currency_code' => $historical_exchange_rate->getBaseCurrencyCode(),
                     'target_currency_code' => $code,
                     'exchange_rate' => $rateBigDecimal->__toString(),
-                    'provider' => $provider,
-                    'date_time' => $historical_exchange_rate->getDateTime(),
-                    'last_update_date' => Carbon::now(),
-                ];
-                $dataToInsert[] = [
-                    'base_currency_code' => $code,
-                    'target_currency_code' => $historical_exchange_rate->getBaseCurrencyCode(),
-                    'exchange_rate' => $this->calculateReversedRate($rateBigDecimal),
                     'provider' => $provider,
                     'date_time' => $historical_exchange_rate->getDateTime(),
                     'last_update_date' => Carbon::now(),

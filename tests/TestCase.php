@@ -49,6 +49,7 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
                 $table->string('base_currency_code', 3);
                 $table->string('target_currency_code', 3);
                 $table->string('exchange_rate', 20);
+                $table->string('provider', 100)->nullable();
                 $table->timestamp('last_update_date')->default(now());
 
                 $table->unique(['base_currency_code', 'target_currency_code'], 'currency_exchange_rates_unique');
@@ -62,6 +63,7 @@ abstract class TestCase extends \Orchestra\Testbench\TestCase
                 $table->string('base_currency_code', 3);
                 $table->string('target_currency_code', 3);
                 $table->string('exchange_rate', 20);
+                $table->string('provider', 100)->nullable();
                 $table->timestamp('date_time');
                 $table->timestamp('last_update_date')->default(now());
 
