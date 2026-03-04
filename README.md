@@ -20,7 +20,7 @@ A comprehensive Laravel package for fetching, storing, and managing exchange rat
 - **DTO Pattern**: Clean data transfer objects for type-safe operations
 - **Repository Pattern**: Clean separation between data access and business logic
 
-## 📦 Installation
+## 📦 Installation:-
 
 ### 1. Install via Composer
 
@@ -91,7 +91,7 @@ class CurrencyController extends Controller
     {
         // Store and retrieve current exchange rates
         $rates = ExchangeRate::storeExchangeRates($currency);
-        
+
         return response()->json($rates);
     }
 }
@@ -108,9 +108,9 @@ class HistoricalController extends Controller
     public function getHistoricalRates(string $currency, string $date)
     {
         $dateTime = Carbon::parse($date);
-        
+
         $rates = HistoricalExchangeRate::getHistoricalExchangeRates($currency, $dateTime);
-        
+
         return response()->json($rates);
     }
 }
@@ -130,28 +130,33 @@ $repository = ExchangeRateRepository::getExchangeRate('USD', 'EUR');
 > $service = resolve(ExchangeRateServiceInterface::class);
 > $service = app(ExchangeRateServiceInterface::class);
 > ```
+>
 > The facades are the recommended and most convenient way for most use cases.
 
 ## 🔌 Supported APIs
 
 The library uses an intelligent fallback mechanism. By default, it tries services in this order:
+
 1. **Exchange Rate API** (primary)
 2. **Open Exchange Rates** (secondary)
 3. **World Bank** (tertiary fallback)
 
 ### Exchange Rate API
+
 - **Provider**: [Exchange Rate API](https://www.exchangerate-api.com/)
 - **Features**: Current and historical rates, real-time updates
 - **Requires**: API Token
 - **Cost**: Free tier available
 
 ### Open Exchange Rates
+
 - **Provider**: [Open Exchange Rates](https://openexchangerates.org/)
 - **Features**: Current and historical rates, real-time updates
 - **Requires**: App ID
 - **Cost**: Free tier available
 
 ### World Bank Exchange Rate API
+
 - **Provider**: [World Bank Open Data](https://api.worldbank.org/)
 - **Features**: Historical yearly average rates
 - **Requires**: No API key (free and open)
@@ -161,11 +166,13 @@ The library uses an intelligent fallback mechanism. By default, it tries service
 - **Caching**: 24-hour cache for efficiency
 
 > **Note on World Bank Data**: The World Bank service provides yearly average exchange rates based on country-level data. While less precise than real-time APIs, it serves as an excellent free fallback option. Exchange rates are computed by:
+>
 > 1. Fetching LCU (Local Currency Unit) per USD rates by country
 > 2. Mapping countries to currencies using [pragmarx/countries](https://github.com/antonioribeiro/countries)
 > 3. Computing cross-currency rates from USD-anchored values
 >
 > **Limitations**:
+>
 > - Yearly averages only (not daily/real-time)
 > - Some currencies may not be available if country mapping fails
 > - Aggregate regions (like "Euro Area") are filtered out automatically
@@ -206,9 +213,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🆘 Support
 
 For support, please contact:
+
 - **Email**: kareem.shaaban@brightcreations.com
 - **Company**: Bright Creations
 
 ---
 
-**Made with ❤️ by Bright Creations**
+**Made with ❤️ by Bright Creations:**
