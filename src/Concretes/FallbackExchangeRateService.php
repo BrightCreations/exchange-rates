@@ -5,7 +5,6 @@ namespace BrightCreations\ExchangeRates\Concretes;
 use BrightCreations\ExchangeRates\Contracts\BaseExchangeRateService;
 use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
 use BrightCreations\ExchangeRates\Contracts\HistoricalSupportExchangeRateServiceInterface;
-use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
 use BrightCreations\ExchangeRates\DTOs\HistoricalBaseCurrencyDto;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRateHistory;
@@ -17,6 +16,9 @@ use Illuminate\Support\Facades\Log;
 /**
  * FallbackExchangeRateService provides a fallback mechanism for exchange rate services.
  * It tries multiple services in order until one succeeds.
+ * All operations — both store and read — are routed through the configured fallback services.
+ * This class has no direct repository interaction; each individual service is responsible
+ * for its own repository calls.
  *
  * @author Bright Creations <kareem.shaaban@brightcreations.com>
  * @license MIT
@@ -35,9 +37,8 @@ class FallbackExchangeRateService extends BaseExchangeRateService implements Exc
      */
     private ?ExchangeRateServiceInterface $currentService = null;
 
-    public function __construct(
-        private CurrencyExchangeRateRepositoryInterface $currencyExchangeRateRepository,
-    ) {
+    public function __construct()
+    {
         // Get fallback order from config
         $this->fallbackServices = Config::get('exchange-rates.fallback_order', [
             ExchangeRateApiService::class,
@@ -135,19 +136,25 @@ class FallbackExchangeRateService extends BaseExchangeRateService implements Exc
     }
 
     /**
-     * Get exchange rates from the database
+     * Get exchange rates from the database via fallback services
      */
     public function getExchangeRates(string $currency_code): Collection
     {
-        return $this->currencyExchangeRateRepository->getExchangeRates($currency_code);
+        return $this->tryWithFallback(
+            fn ($service) => $service->getExchangeRates($currency_code),
+            "getExchangeRates({$currency_code})"
+        );
     }
 
     /**
-     * Get all exchange rates from the database
+     * Get all exchange rates from the database via fallback services
      */
     public function getAllExchangeRates(): Collection
     {
-        return $this->currencyExchangeRateRepository->getAllExchangeRates();
+        return $this->tryWithFallback(
+            fn ($service) => $service->getAllExchangeRates(),
+            'getAllExchangeRates'
+        );
     }
 
     /**
@@ -191,22 +198,40 @@ class FallbackExchangeRateService extends BaseExchangeRateService implements Exc
     }
 
     /**
-     * Get historical exchange rates from the database
+     * Get historical exchange rates from the database via fallback services
      *
      *
      * @return Collection<CurrencyExchangeRateHistory>
      */
     public function getHistoricalExchangeRates(string $currency_code, CarbonInterface $date_time): Collection
     {
-        return $this->currencyExchangeRateRepository->getHistoricalExchangeRates($currency_code, $date_time);
+        return $this->tryWithFallback(
+            function ($service) use ($currency_code, $date_time) {
+                if (! ($service instanceof HistoricalSupportExchangeRateServiceInterface)) {
+                    throw new \RuntimeException('Service does not support historical exchange rates');
+                }
+
+                return $service->getHistoricalExchangeRates($currency_code, $date_time);
+            },
+            "getHistoricalExchangeRates({$currency_code})"
+        );
     }
 
     /**
-     * Get a specific historical exchange rate from the database
+     * Get a specific historical exchange rate from the database via fallback services
      */
     public function getHistoricalExchangeRate(string $currency_code, string $target_currency_code, CarbonInterface $date_time): CurrencyExchangeRateHistory
     {
-        return $this->currencyExchangeRateRepository->getHistoricalExchangeRate($currency_code, $target_currency_code, $date_time);
+        return $this->tryWithFallback(
+            function ($service) use ($currency_code, $target_currency_code, $date_time) {
+                if (! ($service instanceof HistoricalSupportExchangeRateServiceInterface)) {
+                    throw new \RuntimeException('Service does not support historical exchange rates');
+                }
+
+                return $service->getHistoricalExchangeRate($currency_code, $target_currency_code, $date_time);
+            },
+            "getHistoricalExchangeRate({$currency_code}, {$target_currency_code})"
+        );
     }
 
     /**
