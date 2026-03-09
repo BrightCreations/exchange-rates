@@ -7,6 +7,7 @@ use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
 use BrightCreations\ExchangeRates\Contracts\HistoricalSupportExchangeRateServiceInterface;
 use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
 class ExchangeRatesServiceProvider extends ServiceProvider
@@ -25,6 +26,21 @@ class ExchangeRatesServiceProvider extends ServiceProvider
 
         // Load Migrations
         $this->loadMigrationsFrom(__DIR__.'/Database/Migrations');
+
+        // Register built-in HTTP endpoints when enabled in config
+        if (Config::get('exchange-rates.routes.enabled', true)) {
+            Route::group($this->routeGroupConfig(), function () {
+                $this->loadRoutesFrom(__DIR__.'/../routes/api.php');
+            });
+        }
+    }
+
+    private function routeGroupConfig(): array
+    {
+        return [
+            'prefix'     => Config::get('exchange-rates.routes.prefix', 'exchange-rates'),
+            'middleware' => Config::get('exchange-rates.routes.middleware', ['api']),
+        ];
     }
 
     public function register()

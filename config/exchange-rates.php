@@ -7,6 +7,22 @@ use BrightCreations\ExchangeRates\Concretes\WorldBankExchangeRateApiService;
 
 return [
 
+    /*
+    |--------------------------------------------------------------------------
+    | Built-in HTTP Endpoints
+    |--------------------------------------------------------------------------
+    |
+    | Set 'routes.enabled' to true to register the package's default read-only
+    | REST endpoints. The 'prefix' and 'middleware' keys let the consuming
+    | application adjust the route group without publishing the package files.
+    |
+    */
+    'routes' => [
+        'enabled'    => true,
+        'prefix'     => 'exchange-rates',
+        'middleware' => ['api'],
+    ],
+
     // defaults
     'default_service' => FallbackExchangeRateService::class,
 

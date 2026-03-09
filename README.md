@@ -177,6 +177,87 @@ The library uses an intelligent fallback mechanism. By default, it tries service
 > - Some currencies may not be available if country mapping fails
 > - Aggregate regions (like "Euro Area") are filtered out automatically
 
+## 🌐 Built-in HTTP Endpoints
+
+The package ships with a default read-only REST endpoint that returns exchange rates already stored in the database. It does **not** call any external provider; use `storeExchangeRates(...)` (via Artisan commands or your own code) to populate the data first.
+
+### Enabling / Disabling
+
+Routes are **enabled by default**. To turn them off, publish the config and set:
+
+```php
+// config/exchange-rates.php
+'routes' => [
+    'enabled' => false,
+],
+```
+
+### Configuration
+
+```php
+'routes' => [
+    'enabled'    => true,
+    'prefix'     => 'exchange-rates',   // URL prefix for all package routes
+    'middleware' => ['api'],            // Middleware applied to the route group
+],
+```
+
+### Get Exchange Rates
+
+```
+GET /exchange-rates/{currency}
+```
+
+| Parameter  | Location    | Required | Description                                                                                 |
+|------------|-------------|----------|---------------------------------------------------------------------------------------------|
+| `currency` | path        | yes      | ISO 4217 base currency code (3 letters, e.g. `USD`). Case-insensitive.                      |
+| `targets`  | query string | no       | Comma-separated list of target currency codes to filter by (e.g. `EUR,GBP,SAR`). If omitted, all stored target currencies are returned. |
+
+#### Example — all targets
+
+```bash
+GET /exchange-rates/USD
+```
+
+```json
+{
+    "data": {
+        "base_currency": "USD",
+        "rates": [
+            { "target_currency": "EUR", "rate": "0.9200000000", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "target_currency": "GBP", "rate": "0.7800000000", "last_updated": "2026-03-09T00:00:00.000000Z" }
+        ]
+    }
+}
+```
+
+#### Example — filtered targets
+
+```bash
+GET /exchange-rates/USD?targets=EUR,SAR
+```
+
+```json
+{
+    "data": {
+        "base_currency": "USD",
+        "rates": [
+            { "target_currency": "EUR", "rate": "0.9200000000", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "target_currency": "SAR", "rate": "3.7500000000", "last_updated": "2026-03-09T00:00:00.000000Z" }
+        ]
+    }
+}
+```
+
+#### Responses
+
+| Status | Meaning                                                             |
+|--------|---------------------------------------------------------------------|
+| 200    | Rates returned. `rates` is an empty array when nothing is stored.  |
+| 422    | Validation error — invalid currency code format.                   |
+
+---
+
 ## 🔄 Fallback Configuration
 
 You can customize the fallback order in `config/exchange-rates.php`:
