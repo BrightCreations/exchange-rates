@@ -37,7 +37,7 @@ it('registers the package route', function () {
 });
 
 it('returns rates for a base currency', function () {
-    $response = $this->getJson('/exchange-rates/USD');
+    $response = $this->getJson('/api/exchange-rates/USD');
 
     $response->assertStatus(200)
         ->assertJsonStructure([
@@ -54,7 +54,7 @@ it('returns rates for a base currency', function () {
 });
 
 it('lowercases the currency in the path and still returns results', function () {
-    $response = $this->getJson('/exchange-rates/usd');
+    $response = $this->getJson('/api/exchange-rates/usd');
 
     $response->assertStatus(200)
         ->assertJsonPath('data.base_currency', 'USD');
@@ -63,7 +63,7 @@ it('lowercases the currency in the path and still returns results', function () 
 });
 
 it('filters rates by a targets query parameter', function () {
-    $response = $this->getJson('/exchange-rates/USD?targets=EUR,GBP');
+    $response = $this->getJson('/api/exchange-rates/USD?targets=EUR,GBP');
 
     $response->assertStatus(200);
 
@@ -75,7 +75,7 @@ it('filters rates by a targets query parameter', function () {
 });
 
 it('filters by a single target currency', function () {
-    $response = $this->getJson('/exchange-rates/USD?targets=SAR');
+    $response = $this->getJson('/api/exchange-rates/USD?targets=SAR');
 
     $response->assertStatus(200);
 
@@ -85,7 +85,7 @@ it('filters by a single target currency', function () {
 });
 
 it('normalizes lowercase targets to uppercase', function () {
-    $response = $this->getJson('/exchange-rates/USD?targets=eur,gbp');
+    $response = $this->getJson('/api/exchange-rates/USD?targets=eur,gbp');
 
     $response->assertStatus(200);
 
@@ -94,7 +94,7 @@ it('normalizes lowercase targets to uppercase', function () {
 });
 
 it('returns an empty rates list when no data is stored for the currency', function () {
-    $response = $this->getJson('/exchange-rates/JPY');
+    $response = $this->getJson('/api/exchange-rates/JPY');
 
     $response->assertStatus(200)
         ->assertJsonPath('data.base_currency', 'JPY')
@@ -102,26 +102,26 @@ it('returns an empty rates list when no data is stored for the currency', functi
 });
 
 it('returns an empty list when the targets filter matches nothing', function () {
-    $response = $this->getJson('/exchange-rates/USD?targets=JPY');
+    $response = $this->getJson('/api/exchange-rates/USD?targets=JPY');
 
     $response->assertStatus(200)
         ->assertJsonPath('data.rates', []);
 });
 
 it('rejects a currency code shorter than three characters', function () {
-    $response = $this->getJson('/exchange-rates/US');
+    $response = $this->getJson('/api/exchange-rates/US');
 
     $response->assertStatus(422);
 });
 
 it('rejects a currency code longer than three characters', function () {
-    $response = $this->getJson('/exchange-rates/USDD');
+    $response = $this->getJson('/api/exchange-rates/USDD');
 
     $response->assertStatus(422);
 });
 
 it('rejects a currency code containing non-letter characters', function () {
-    $response = $this->getJson('/exchange-rates/U1D');
+    $response = $this->getJson('/api/exchange-rates/U1D');
 
     $response->assertStatus(422);
 });

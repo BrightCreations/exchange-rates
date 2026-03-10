@@ -197,15 +197,17 @@ Routes are **enabled by default**. To turn them off, publish the config and set:
 ```php
 'routes' => [
     'enabled'    => true,
-    'prefix'     => 'exchange-rates',   // URL prefix for all package routes
+    'prefix'     => 'exchange-rates',   // Package-specific segment appended after 'api/'
     'middleware' => ['api'],            // Middleware applied to the route group
 ],
 ```
 
+The final URL prefix is always `api/{prefix}`, so the default endpoint resolves to `/api/exchange-rates/{currency}`. Changing `prefix` to e.g. `rates` would produce `/api/rates/{currency}`.
+
 ### Get Exchange Rates
 
 ```
-GET /exchange-rates/{currency}
+GET /api/exchange-rates/{currency}
 ```
 
 | Parameter  | Location    | Required | Description                                                                                 |
@@ -216,7 +218,7 @@ GET /exchange-rates/{currency}
 #### Example — all targets
 
 ```bash
-GET /exchange-rates/USD
+GET /api/exchange-rates/USD
 ```
 
 ```json
@@ -234,7 +236,7 @@ GET /exchange-rates/USD
 #### Example — filtered targets
 
 ```bash
-GET /exchange-rates/USD?targets=EUR,SAR
+GET /api/exchange-rates/USD?targets=EUR,SAR
 ```
 
 ```json
