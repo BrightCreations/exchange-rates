@@ -37,8 +37,10 @@ class ExchangeRatesServiceProvider extends ServiceProvider
 
     private function routeGroupConfig(): array
     {
+        $packagePrefix = Config::get('exchange-rates.routes.prefix', 'exchange-rates');
+
         return [
-            'prefix'     => Config::get('exchange-rates.routes.prefix', 'exchange-rates'),
+            'prefix'     => 'api/'.$packagePrefix,
             'middleware' => Config::get('exchange-rates.routes.middleware', ['api']),
         ];
     }
