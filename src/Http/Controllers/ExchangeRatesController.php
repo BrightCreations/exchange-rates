@@ -89,18 +89,16 @@ class ExchangeRatesController extends Controller
     private function reversedResponse(string $targetCurrency, ?string $currenciesParam): JsonResponse
     {
         try {
-            $all = $this->exchangeRateService->getAllExchangeRates();
+            $rates = $this->exchangeRateService->getExchangeRates($targetCurrency);
         } catch (\RuntimeException) {
-            $all = collect();
+            $rates = collect();
         }
-
-        $rows = $all->where('target_currency_code', $targetCurrency);
 
         if (! empty($currenciesParam)) {
-            $rows = $rows->whereIn('base_currency_code', $this->parseCurrencyList($currenciesParam));
+            $rates = $rates->whereIn('target_currency_code', $this->parseCurrencyList($currenciesParam))->values();
         }
 
-        $rates = $rows->map(function ($rate) {
+        $rates = $rates->map(function ($rate) {
             $stored = BigDecimal::of($rate->exchange_rate);
 
             if ($stored->isZero()) {
@@ -108,7 +106,7 @@ class ExchangeRatesController extends Controller
             }
 
             return [
-                'source_currency' => $rate->base_currency_code,
+                'source_currency' => $rate->target_currency_code,
                 'rate'            => BigDecimal::of(1)
                     ->dividedBy($stored, 10, RoundingMode::HALF_UP)
                     ->__toString(),
