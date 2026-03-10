@@ -63,7 +63,7 @@ it('lowercases the currency in the path and still returns results', function () 
 });
 
 it('filters rates by a targets query parameter', function () {
-    $response = $this->getJson('/api/exchange-rates/USD?targets=EUR,GBP');
+    $response = $this->getJson('/api/exchange-rates/USD?currencies=EUR,GBP');
 
     $response->assertStatus(200);
 
@@ -75,7 +75,7 @@ it('filters rates by a targets query parameter', function () {
 });
 
 it('filters by a single target currency', function () {
-    $response = $this->getJson('/api/exchange-rates/USD?targets=SAR');
+    $response = $this->getJson('/api/exchange-rates/USD?currencies=SAR');
 
     $response->assertStatus(200);
 
@@ -85,7 +85,7 @@ it('filters by a single target currency', function () {
 });
 
 it('normalizes lowercase targets to uppercase', function () {
-    $response = $this->getJson('/api/exchange-rates/USD?targets=eur,gbp');
+    $response = $this->getJson('/api/exchange-rates/USD?currencies=eur,gbp');
 
     $response->assertStatus(200);
 
@@ -102,7 +102,7 @@ it('returns an empty rates list when no data is stored for the currency', functi
 });
 
 it('returns an empty list when the targets filter matches nothing', function () {
-    $response = $this->getJson('/api/exchange-rates/USD?targets=JPY');
+    $response = $this->getJson('/api/exchange-rates/USD?currencies=JPY');
 
     $response->assertStatus(200)
         ->assertJsonPath('data.rates', []);
@@ -196,7 +196,7 @@ describe('reversed mode', function () {
     });
 
     it('filters results by sources query parameter', function () {
-        $response = $this->getJson('/api/exchange-rates/EUR?reversed=true&sources=USD,GBP');
+        $response = $this->getJson('/api/exchange-rates/EUR?reversed=true&currencies=USD,GBP');
 
         $response->assertStatus(200);
         expect($response->json('data.rates'))->toHaveCount(2);
@@ -206,7 +206,7 @@ describe('reversed mode', function () {
     });
 
     it('normalizes lowercase sources to uppercase', function () {
-        $response = $this->getJson('/api/exchange-rates/EUR?reversed=true&sources=usd,sar');
+        $response = $this->getJson('/api/exchange-rates/EUR?reversed=true&currencies=usd,sar');
 
         $response->assertStatus(200);
         expect($response->json('data.rates'))->toHaveCount(2);
@@ -221,7 +221,7 @@ describe('reversed mode', function () {
     });
 
     it('returns empty list when sources filter matches nothing', function () {
-        $response = $this->getJson('/api/exchange-rates/EUR?reversed=true&sources=JPY');
+        $response = $this->getJson('/api/exchange-rates/EUR?reversed=true&currencies=JPY');
 
         $response->assertStatus(200)
             ->assertJsonPath('data.rates', []);

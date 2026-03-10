@@ -173,10 +173,10 @@ GET /api/exchange-rates/{currency}
 
 `{currency}` is the **base** currency. Returns all stored target currencies and their rates.
 
-| Parameter  | Location     | Required | Description |
-|------------|--------------|----------|-------------|
-| `currency` | path         | yes      | ISO 4217 base currency code (3 letters, e.g. `USD`). Case-insensitive. |
-| `targets`  | query string | no       | Comma-separated target currency codes to filter by (e.g. `EUR,GBP,SAR`). If omitted, all stored targets are returned. |
+| Parameter    | Location     | Required | Description |
+|--------------|--------------|----------|-------------|
+| `currency`   | path         | yes      | ISO 4217 base currency code (3 letters, e.g. `USD`). Case-insensitive. |
+| `currencies` | query string | no       | Comma-separated target currency codes to filter by (e.g. `EUR,GBP,SAR`). If omitted, all stored targets are returned. |
 
 #### Example — all targets
 
@@ -197,10 +197,10 @@ GET /api/exchange-rates/USD
 }
 ```
 
-#### Example — filtered targets
+#### Example — filtered
 
 ```
-GET /api/exchange-rates/USD?targets=EUR,SAR
+GET /api/exchange-rates/USD?currencies=EUR,SAR
 ```
 
 ```json
@@ -225,11 +225,11 @@ GET /api/exchange-rates/{currency}?reversed=true
 
 `{currency}` becomes the **target** currency. Returns all stored source currencies that have a rate pointing to this target, with each rate inverted (`1 / stored_rate`) using precise decimal arithmetic (`brick/math`, HALF_UP, 10 decimal places).
 
-| Parameter  | Location     | Required | Description |
-|------------|--------------|----------|-------------|
-| `currency` | path         | yes      | ISO 4217 target currency code (3 letters, e.g. `EUR`). Case-insensitive. |
-| `reversed` | query string | yes      | Must be `true` (or `1`) to activate this mode. |
-| `sources`  | query string | no       | Comma-separated source currency codes to filter by (e.g. `USD,GBP`). If omitted, all stored sources are returned. |
+| Parameter    | Location     | Required | Description |
+|--------------|--------------|----------|-------------|
+| `currency`   | path         | yes      | ISO 4217 target currency code (3 letters, e.g. `EUR`). Case-insensitive. |
+| `reversed`   | query string | yes      | Must be `true` (or `1`) to activate this mode. |
+| `currencies` | query string | no       | Comma-separated source currency codes to filter by (e.g. `USD,GBP`). If omitted, all stored sources are returned. |
 
 #### Example — all sources
 
@@ -250,10 +250,10 @@ GET /api/exchange-rates/EUR?reversed=true
 }
 ```
 
-#### Example — filtered sources
+#### Example — filtered
 
 ```
-GET /api/exchange-rates/EUR?reversed=true&sources=USD,SAR
+GET /api/exchange-rates/EUR?reversed=true&currencies=USD,SAR
 ```
 
 ```json

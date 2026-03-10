@@ -21,13 +21,13 @@ class ExchangeRatesController extends Controller
      * Normal mode (reversed omitted / false):
      *   - {currency} is treated as the BASE currency.
      *   - Returns all target currencies and their stored rates.
-     *   - Optional `targets` filters the returned target currencies.
+     *   - Optional `currencies` filters the returned target currencies.
      *
      * Reversed mode (reversed=true):
      *   - {currency} is treated as the TARGET currency.
      *   - Returns all base currencies that store a rate to this target,
      *     with each rate inverted (1 / stored_rate) using precise decimal math.
-     *   - Optional `sources` filters the returned base currencies.
+     *   - Optional `currencies` filters the returned source currencies.
      *
      * @param  Request  $request
      * @param  string   $currency  ISO 4217 currency code (3 letters)
@@ -41,26 +41,25 @@ class ExchangeRatesController extends Controller
         ]);
 
         $validated = $request->validate([
-            'currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
-            'reversed' => ['nullable', 'boolean'],
-            'targets'  => ['nullable', 'string'],
-            'sources'  => ['nullable', 'string'],
+            'currency'   => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
+            'reversed'   => ['nullable', 'boolean'],
+            'currencies' => ['nullable', 'string'],
         ]);
 
         $code     = $validated['currency'];
         $reversed = (bool) ($validated['reversed'] ?? false);
 
         if ($reversed) {
-            return $this->reversedResponse($code, $validated['sources'] ?? null);
+            return $this->reversedResponse($code, $validated['currencies'] ?? null);
         }
 
-        return $this->normalResponse($code, $validated['targets'] ?? null);
+        return $this->normalResponse($code, $validated['currencies'] ?? null);
     }
 
     /**
      * Normal mode: {currency} is the base, return rates to all targets.
      */
-    private function normalResponse(string $baseCurrency, ?string $targetsParam): JsonResponse
+    private function normalResponse(string $baseCurrency, ?string $currenciesParam): JsonResponse
     {
         try {
             $rates = $this->exchangeRateService->getExchangeRates($baseCurrency);
@@ -68,8 +67,8 @@ class ExchangeRatesController extends Controller
             $rates = collect();
         }
 
-        if (! empty($targetsParam)) {
-            $rates = $rates->whereIn('target_currency_code', $this->parseCurrencyList($targetsParam))->values();
+        if (! empty($currenciesParam)) {
+            $rates = $rates->whereIn('target_currency_code', $this->parseCurrencyList($currenciesParam))->values();
         }
 
         return response()->json([
@@ -87,7 +86,7 @@ class ExchangeRatesController extends Controller
     /**
      * Reversed mode: {currency} is the target, return inverted rates from all sources.
      */
-    private function reversedResponse(string $targetCurrency, ?string $sourcesParam): JsonResponse
+    private function reversedResponse(string $targetCurrency, ?string $currenciesParam): JsonResponse
     {
         try {
             $all = $this->exchangeRateService->getAllExchangeRates();
@@ -97,8 +96,8 @@ class ExchangeRatesController extends Controller
 
         $rows = $all->where('target_currency_code', $targetCurrency);
 
-        if (! empty($sourcesParam)) {
-            $rows = $rows->whereIn('base_currency_code', $this->parseCurrencyList($sourcesParam));
+        if (! empty($currenciesParam)) {
+            $rows = $rows->whereIn('base_currency_code', $this->parseCurrencyList($currenciesParam));
         }
 
         $rates = $rows->map(function ($rate) {
