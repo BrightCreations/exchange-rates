@@ -19,8 +19,11 @@ A comprehensive Laravel package for fetching, storing, and managing exchange rat
 - **Extensible Architecture**: Easy to add new exchange rate providers
 - **DTO Pattern**: Clean data transfer objects for type-safe operations
 - **Repository Pattern**: Clean separation between data access and business logic
+- **Built-in REST Endpoints**: Ready-to-use read-only HTTP endpoints with normal and reversed lookup modes
 
-## 📦 Installation:-
+---
+
+## 📦 Installation
 
 ### 1. Install via Composer
 
@@ -59,6 +62,8 @@ OPEN_EXCHANGE_RATE_APP_ID=your_app_id_here
 WORLD_BANK_EXCHANGE_RATE_BASE_URL=https://api.worldbank.org/v2
 ```
 
+---
+
 ## 🏗️ Architecture Overview
 
 This library follows a clean, layered architecture:
@@ -69,6 +74,8 @@ This library follows a clean, layered architecture:
 - **Contracts**: Define interfaces for extensibility
 - **Models**: Eloquent models for database entities
 
+---
+
 ## 📚 Documentation
 
 - **[Installation & Configuration](docs/installation.md)** - Detailed setup instructions
@@ -77,6 +84,8 @@ This library follows a clean, layered architecture:
 - **[DTOs Guide](docs/dtos.md)** - Data Transfer Objects explained
 - **[API Reference](docs/api-reference.md)** - Complete method documentation
 - **[Examples](docs/examples.md)** - Practical usage examples
+
+---
 
 ## 🔧 Quick Start
 
@@ -89,7 +98,7 @@ class CurrencyController extends Controller
 {
     public function getRates(string $currency = 'USD')
     {
-        // Store and retrieve current exchange rates
+        // Fetch from provider, store, and return current exchange rates
         $rates = ExchangeRate::storeExchangeRates($currency);
 
         return response()->json($rates);
@@ -121,7 +130,7 @@ class HistoricalController extends Controller
 ```php
 use BrightCreations\ExchangeRates\Facades\ExchangeRateRepository;
 
-$repository = ExchangeRateRepository::getExchangeRate('USD', 'EUR');
+$rate = ExchangeRateRepository::getExchangeRate('USD', 'EUR');
 ```
 
 > **Note:** You can also use Laravel's `resolve()` or `app()` helpers to access the services directly:
@@ -133,12 +142,149 @@ $repository = ExchangeRateRepository::getExchangeRate('USD', 'EUR');
 >
 > The facades are the recommended and most convenient way for most use cases.
 
+---
+
+## 🌐 Built-in HTTP Endpoints
+
+The package ships with a default read-only REST endpoint that returns exchange rates already stored in the database. It does **not** call any external provider — use `storeExchangeRates(...)` (via Artisan commands or your own code) to populate data first.
+
+### Route Configuration
+
+Routes are **enabled by default**. Publish the config to customise or disable them:
+
+```php
+// config/exchange-rates.php
+'routes' => [
+    'enabled'    => true,
+    'prefix'     => 'exchange-rates', // segment appended after 'api/'
+    'middleware' => ['api'],
+],
+```
+
+The final URL is always `api/{prefix}/...`, so the default resolves to `/api/exchange-rates/{currency}`.
+
+---
+
+### Normal Mode — rates from a base currency
+
+```
+GET /api/exchange-rates/{currency}
+```
+
+`{currency}` is the **base** currency. Returns all stored target currencies and their rates.
+
+| Parameter  | Location     | Required | Description |
+|------------|--------------|----------|-------------|
+| `currency` | path         | yes      | ISO 4217 base currency code (3 letters, e.g. `USD`). Case-insensitive. |
+| `targets`  | query string | no       | Comma-separated target currency codes to filter by (e.g. `EUR,GBP,SAR`). If omitted, all stored targets are returned. |
+
+#### Example — all targets
+
+```
+GET /api/exchange-rates/USD
+```
+
+```json
+{
+    "data": {
+        "base_currency": "USD",
+        "rates": [
+            { "target_currency": "EUR", "rate": "0.9200000000", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "target_currency": "GBP", "rate": "0.7800000000", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "target_currency": "SAR", "rate": "3.7500000000", "last_updated": "2026-03-09T00:00:00.000000Z" }
+        ]
+    }
+}
+```
+
+#### Example — filtered targets
+
+```
+GET /api/exchange-rates/USD?targets=EUR,SAR
+```
+
+```json
+{
+    "data": {
+        "base_currency": "USD",
+        "rates": [
+            { "target_currency": "EUR", "rate": "0.9200000000", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "target_currency": "SAR", "rate": "3.7500000000", "last_updated": "2026-03-09T00:00:00.000000Z" }
+        ]
+    }
+}
+```
+
+---
+
+### Reversed Mode — rates into a target currency
+
+```
+GET /api/exchange-rates/{currency}?reversed=true
+```
+
+`{currency}` becomes the **target** currency. Returns all stored source currencies that have a rate pointing to this target, with each rate inverted (`1 / stored_rate`) using precise decimal arithmetic (`brick/math`, HALF_UP, 10 decimal places).
+
+| Parameter  | Location     | Required | Description |
+|------------|--------------|----------|-------------|
+| `currency` | path         | yes      | ISO 4217 target currency code (3 letters, e.g. `EUR`). Case-insensitive. |
+| `reversed` | query string | yes      | Must be `true` (or `1`) to activate this mode. |
+| `sources`  | query string | no       | Comma-separated source currency codes to filter by (e.g. `USD,GBP`). If omitted, all stored sources are returned. |
+
+#### Example — all sources
+
+```
+GET /api/exchange-rates/EUR?reversed=true
+```
+
+```json
+{
+    "data": {
+        "target_currency": "EUR",
+        "rates": [
+            { "source_currency": "USD", "rate": "1.0869565217", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "source_currency": "GBP", "rate": "0.8474576271", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "source_currency": "SAR", "rate": "4.0765593966", "last_updated": "2026-03-09T00:00:00.000000Z" }
+        ]
+    }
+}
+```
+
+#### Example — filtered sources
+
+```
+GET /api/exchange-rates/EUR?reversed=true&sources=USD,SAR
+```
+
+```json
+{
+    "data": {
+        "target_currency": "EUR",
+        "rates": [
+            { "source_currency": "USD", "rate": "1.0869565217", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "source_currency": "SAR", "rate": "4.0765593966", "last_updated": "2026-03-09T00:00:00.000000Z" }
+        ]
+    }
+}
+```
+
+---
+
+### HTTP Responses
+
+| Status | Meaning |
+|--------|---------|
+| 200    | Success. `rates` is an empty array when no data is stored for that currency. |
+| 422    | Validation error — invalid currency code format. |
+
+---
+
 ## 🔌 Supported APIs
 
 The library uses an intelligent fallback mechanism. By default, it tries services in this order:
 
-1. **Exchange Rate API** (primary)
-2. **Open Exchange Rates** (secondary)
+1. **Open Exchange Rates** (primary)
+2. **Exchange Rate API** (secondary)
 3. **World Bank** (tertiary fallback)
 
 ### Exchange Rate API
@@ -177,138 +323,16 @@ The library uses an intelligent fallback mechanism. By default, it tries service
 > - Some currencies may not be available if country mapping fails
 > - Aggregate regions (like "Euro Area") are filtered out automatically
 
-## 🌐 Built-in HTTP Endpoints
-
-The package ships with a default read-only REST endpoint that returns exchange rates already stored in the database. It does **not** call any external provider; use `storeExchangeRates(...)` (via Artisan commands or your own code) to populate the data first.
-
-### Enabling / Disabling
-
-Routes are **enabled by default**. To turn them off, publish the config and set:
-
-```php
-// config/exchange-rates.php
-'routes' => [
-    'enabled' => false,
-],
-```
-
-### Configuration
-
-```php
-'routes' => [
-    'enabled'    => true,
-    'prefix'     => 'exchange-rates',   // Package-specific segment appended after 'api/'
-    'middleware' => ['api'],            // Middleware applied to the route group
-],
-```
-
-The final URL prefix is always `api/{prefix}`, so the default endpoint resolves to `/api/exchange-rates/{currency}`. Changing `prefix` to e.g. `rates` would produce `/api/rates/{currency}`.
-
-### Get Exchange Rates
-
-```
-GET /api/exchange-rates/{currency}
-```
-
-| Parameter  | Location    | Required | Description                                                                                 |
-|------------|-------------|----------|---------------------------------------------------------------------------------------------|
-| `currency` | path        | yes      | ISO 4217 base currency code (3 letters, e.g. `USD`). Case-insensitive.                      |
-| `targets`  | query string | no       | Comma-separated list of target currency codes to filter by (e.g. `EUR,GBP,SAR`). If omitted, all stored target currencies are returned. |
-
-#### Example — all targets
-
-```bash
-GET /api/exchange-rates/USD
-```
-
-```json
-{
-    "data": {
-        "base_currency": "USD",
-        "rates": [
-            { "target_currency": "EUR", "rate": "0.9200000000", "last_updated": "2026-03-09T00:00:00.000000Z" },
-            { "target_currency": "GBP", "rate": "0.7800000000", "last_updated": "2026-03-09T00:00:00.000000Z" }
-        ]
-    }
-}
-```
-
-#### Example — filtered targets
-
-```bash
-GET /api/exchange-rates/USD?targets=EUR,SAR
-```
-
-```json
-{
-    "data": {
-        "base_currency": "USD",
-        "rates": [
-            { "target_currency": "EUR", "rate": "0.9200000000", "last_updated": "2026-03-09T00:00:00.000000Z" },
-            { "target_currency": "SAR", "rate": "3.7500000000", "last_updated": "2026-03-09T00:00:00.000000Z" }
-        ]
-    }
-}
-```
-
-#### Responses
-
-| Status | Meaning                                                             |
-|--------|---------------------------------------------------------------------|
-| 200    | Rates returned. `rates` is an empty array when nothing is stored.  |
-| 422    | Validation error — invalid currency code format.                   |
-
-#### Reversed mode
-
-Add `?reversed=true` to flip the lookup: the path `{currency}` becomes the **target** currency. The endpoint returns all stored source (base) currencies that have a rate to this target, with each rate inverted (`1 / stored_rate`) using precise decimal arithmetic. Use `sources` to filter which base currencies are included.
-
-| Parameter  | Location     | Required | Description                                                                                    |
-|------------|--------------|----------|------------------------------------------------------------------------------------------------|
-| `reversed` | query string | no       | Set to `true` to treat the path currency as the target and return inverted rates.              |
-| `sources`  | query string | no       | Comma-separated base currency codes to filter by (e.g. `USD,GBP`). Only used when `reversed=true`. |
-
-```bash
-GET /api/exchange-rates/EUR?reversed=true
-```
-
-```json
-{
-    "data": {
-        "target_currency": "EUR",
-        "rates": [
-            { "source_currency": "USD", "rate": "1.0869565217", "last_updated": "2026-03-09T00:00:00.000000Z" },
-            { "source_currency": "GBP", "rate": "0.8474576271", "last_updated": "2026-03-09T00:00:00.000000Z" }
-        ]
-    }
-}
-```
-
-```bash
-GET /api/exchange-rates/EUR?reversed=true&sources=USD,SAR
-```
-
-```json
-{
-    "data": {
-        "target_currency": "EUR",
-        "rates": [
-            { "source_currency": "USD", "rate": "1.0869565217", "last_updated": "2026-03-09T00:00:00.000000Z" },
-            { "source_currency": "SAR", "rate": "4.0765593966", "last_updated": "2026-03-09T00:00:00.000000Z" }
-        ]
-    }
-}
-```
-
 ---
 
 ## 🔄 Fallback Configuration
 
-You can customize the fallback order in `config/exchange-rates.php`:
+You can customise the fallback order in `config/exchange-rates.php`:
 
 ```php
 'fallback_order' => [
-    ExchangeRateApiService::class,
     OpenExchangeRateService::class,
+    ExchangeRateApiService::class,
     WorldBankExchangeRateApiService::class,
 ],
 ```
@@ -322,6 +346,8 @@ $worldBankService = app(WorldBankExchangeRateApiService::class);
 $rates = $worldBankService->storeExchangeRates('EUR');
 ```
 
+---
+
 ## 🤝 Contributing
 
 1. Fork the repository
@@ -330,9 +356,11 @@ $rates = $worldBankService->storeExchangeRates('EUR');
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+---
+
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
@@ -344,4 +372,4 @@ For support, please contact:
 
 ---
 
-**Made with ❤️ by Bright Creations:**
+**Made with ❤️ by Bright Creations**
