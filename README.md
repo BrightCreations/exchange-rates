@@ -258,6 +258,47 @@ GET /api/exchange-rates/USD?targets=EUR,SAR
 | 200    | Rates returned. `rates` is an empty array when nothing is stored.  |
 | 422    | Validation error — invalid currency code format.                   |
 
+#### Reversed mode
+
+Add `?reversed=true` to flip the lookup: the path `{currency}` becomes the **target** currency. The endpoint returns all stored source (base) currencies that have a rate to this target, with each rate inverted (`1 / stored_rate`) using precise decimal arithmetic. Use `sources` to filter which base currencies are included.
+
+| Parameter  | Location     | Required | Description                                                                                    |
+|------------|--------------|----------|------------------------------------------------------------------------------------------------|
+| `reversed` | query string | no       | Set to `true` to treat the path currency as the target and return inverted rates.              |
+| `sources`  | query string | no       | Comma-separated base currency codes to filter by (e.g. `USD,GBP`). Only used when `reversed=true`. |
+
+```bash
+GET /api/exchange-rates/EUR?reversed=true
+```
+
+```json
+{
+    "data": {
+        "target_currency": "EUR",
+        "rates": [
+            { "source_currency": "USD", "rate": "1.0869565217", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "source_currency": "GBP", "rate": "0.8474576271", "last_updated": "2026-03-09T00:00:00.000000Z" }
+        ]
+    }
+}
+```
+
+```bash
+GET /api/exchange-rates/EUR?reversed=true&sources=USD,SAR
+```
+
+```json
+{
+    "data": {
+        "target_currency": "EUR",
+        "rates": [
+            { "source_currency": "USD", "rate": "1.0869565217", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "source_currency": "SAR", "rate": "4.0765593966", "last_updated": "2026-03-09T00:00:00.000000Z" }
+        ]
+    }
+}
+```
+
 ---
 
 ## 🔄 Fallback Configuration

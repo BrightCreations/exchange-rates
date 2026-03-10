@@ -56,6 +56,13 @@ interface CurrencyExchangeRateRepositoryInterface
     public function getExchangeRates(string $base_currency_code): Collection;
 
     /**
+     * Get all stored rows where the given currency is the target.
+     *
+     * @return Collection<CurrencyExchangeRate>
+     */
+    public function getExchangeRatesByTargetCurrency(string $target_currency_code): Collection;
+
+    /**
      * Get bulk exchange rates from the database
      *
      * @param  string[]  $base_currency_codes

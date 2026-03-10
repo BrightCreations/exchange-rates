@@ -2,6 +2,8 @@
 
 namespace BrightCreations\ExchangeRates\Http\Controllers;
 
+use Brick\Math\BigDecimal;
+use Brick\Math\RoundingMode;
 use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,41 +16,60 @@ class ExchangeRatesController extends Controller
     ) {}
 
     /**
-     * Return stored exchange rates for a given base currency.
+     * Return stored exchange rates for a given currency.
      *
-     * Query parameter:
-     *   targets  Comma-separated list of target currency codes to filter by (e.g. EUR,GBP,SAR).
-     *            When omitted every stored target currency is returned.
+     * Normal mode (reversed omitted / false):
+     *   - {currency} is treated as the BASE currency.
+     *   - Returns all target currencies and their stored rates.
+     *   - Optional `targets` filters the returned target currencies.
+     *
+     * Reversed mode (reversed=true):
+     *   - {currency} is treated as the TARGET currency.
+     *   - Returns all base currencies that store a rate to this target,
+     *     with each rate inverted (1 / stored_rate) using precise decimal math.
+     *   - Optional `sources` filters the returned base currencies.
      *
      * @param  Request  $request
-     * @param  string   $currency  ISO 4217 base currency code (3 letters)
+     * @param  string   $currency  ISO 4217 currency code (3 letters)
      * @return JsonResponse
      */
     public function index(Request $request, string $currency): JsonResponse
     {
-        $request->merge(['currency' => strtoupper($currency)]);
+        $request->merge([
+            'currency' => strtoupper($currency),
+            'reversed' => filter_var($request->input('reversed', false), FILTER_VALIDATE_BOOLEAN),
+        ]);
 
         $validated = $request->validate([
             'currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
+            'reversed' => ['nullable', 'boolean'],
             'targets'  => ['nullable', 'string'],
+            'sources'  => ['nullable', 'string'],
         ]);
 
-        $baseCurrency = $validated['currency'];
+        $code     = $validated['currency'];
+        $reversed = (bool) ($validated['reversed'] ?? false);
 
+        if ($reversed) {
+            return $this->reversedResponse($code, $validated['sources'] ?? null);
+        }
+
+        return $this->normalResponse($code, $validated['targets'] ?? null);
+    }
+
+    /**
+     * Normal mode: {currency} is the base, return rates to all targets.
+     */
+    private function normalResponse(string $baseCurrency, ?string $targetsParam): JsonResponse
+    {
         try {
             $rates = $this->exchangeRateService->getExchangeRates($baseCurrency);
         } catch (\RuntimeException) {
             $rates = collect();
         }
 
-        if (! empty($validated['targets'])) {
-            $targetList = collect(explode(',', $validated['targets']))
-                ->map(fn (string $t) => strtoupper(trim($t)))
-                ->filter(fn (string $t) => strlen($t) === 3)
-                ->values()
-                ->all();
-
-            $rates = $rates->whereIn('target_currency_code', $targetList)->values();
+        if (! empty($targetsParam)) {
+            $rates = $rates->whereIn('target_currency_code', $this->parseCurrencyList($targetsParam))->values();
         }
 
         return response()->json([
@@ -61,5 +82,60 @@ class ExchangeRatesController extends Controller
                 ])->values(),
             ],
         ]);
+    }
+
+    /**
+     * Reversed mode: {currency} is the target, return inverted rates from all sources.
+     */
+    private function reversedResponse(string $targetCurrency, ?string $sourcesParam): JsonResponse
+    {
+        try {
+            $all = $this->exchangeRateService->getAllExchangeRates();
+        } catch (\RuntimeException) {
+            $all = collect();
+        }
+
+        $rows = $all->where('target_currency_code', $targetCurrency);
+
+        if (! empty($sourcesParam)) {
+            $rows = $rows->whereIn('base_currency_code', $this->parseCurrencyList($sourcesParam));
+        }
+
+        $rates = $rows->map(function ($rate) {
+            $stored = BigDecimal::of($rate->exchange_rate);
+
+            if ($stored->isZero()) {
+                return null;
+            }
+
+            return [
+                'source_currency' => $rate->base_currency_code,
+                'rate'            => BigDecimal::of(1)
+                    ->dividedBy($stored, 10, RoundingMode::HALF_UP)
+                    ->__toString(),
+                'last_updated'    => $rate->last_update_date,
+            ];
+        })->filter()->values();
+
+        return response()->json([
+            'data' => [
+                'target_currency' => $targetCurrency,
+                'rates'           => $rates,
+            ],
+        ]);
+    }
+
+    /**
+     * Parse a comma-separated currency code string into a normalized uppercase array.
+     *
+     * @return string[]
+     */
+    private function parseCurrencyList(string $raw): array
+    {
+        return collect(explode(',', $raw))
+            ->map(fn (string $c) => strtoupper(trim($c)))
+            ->filter(fn (string $c) => strlen($c) === 3)
+            ->values()
+            ->all();
     }
 }

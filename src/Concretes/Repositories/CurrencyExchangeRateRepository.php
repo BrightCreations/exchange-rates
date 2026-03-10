@@ -176,6 +176,11 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
         return CurrencyExchangeRate::where(compact('base_currency_code'))->get();
     }
 
+    public function getExchangeRatesByTargetCurrency(string $target_currency_code): Collection
+    {
+        return CurrencyExchangeRate::where(compact('target_currency_code'))->get();
+    }
+
     public function getBulkExchangeRates(array $base_currency_codes): Collection
     {
         return CurrencyExchangeRate::whereIn('base_currency_code', $base_currency_codes)->get()->groupBy('base_currency_code');
