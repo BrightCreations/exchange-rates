@@ -372,6 +372,54 @@ foreach ($rates as $pairKey => $rate) {
 }
 ```
 
+## Bounding historical rates
+
+These methods help locate historical rates around a target date. They use **full datetime** comparison (`<=` / `>=` on `date_time`), unlike `getHistoricalExchangeRate()` which matches by **date only** (`whereDate`).
+
+### getPreviousHistoricalRate()
+
+Returns the last `CurrencyExchangeRateHistory` on or before the target datetime, or `null` if none exists.
+
+```php
+use Carbon\Carbon;
+
+$rate = $repository->getPreviousHistoricalRate('USD', 'EUR', Carbon::parse('2024-01-08'));
+```
+
+### getNextHistoricalRate()
+
+Returns the first `CurrencyExchangeRateHistory` on or after the target datetime, or `null` if none exists.
+
+```php
+$rate = $repository->getNextHistoricalRate('USD', 'EUR', Carbon::parse('2024-01-08'));
+```
+
+### getBoundingHistoricalRates()
+
+Returns a collection of **zero or two** records that bracket the target date:
+
+- **d1, r1** — last rate on or before the target date
+- **d2, r2** — first rate on or after the target date
+
+Returns an **empty collection** when:
+
+- Either bound is missing (no data before or after the target)
+- Both bounds resolve to the **same** database record (e.g. only one rate exists on the target date)
+
+```php
+$bounds = $repository->getBoundingHistoricalRates('USD', 'EUR', Carbon::parse('2024-01-08'));
+
+if ($bounds->count() === 2) {
+    [$before, $after] = $bounds->all();
+    // $before->date_time, $before->exchange_rate
+    // $after->date_time, $after->exchange_rate
+}
+```
+
+### Interpolation (money-converter)
+
+This package supplies bounding data only. **Linear interpolation** between two bounding rates is implemented in [brightcreations/money-converter](https://github.com/BrightCreations/money-converter) via `MoneyConverter::interpolate()` and `ExchangeRateRepository::getBoundingHistoricalRates()`.
+
 ## Why DTOs?
 
 DTOs provide several benefits in repository operations:

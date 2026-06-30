@@ -398,3 +398,89 @@ describe('Retrieve single historical exchange rate for a pair and bulk historica
         $this->assertEquals(130.0, $result['EUR']['JPY']['2023-01-02'][0]->exchange_rate);
     });
 });
+
+describe('Bounding historical rates', function () {
+    $baseCurrency = 'USD';
+    $targetCurrency = 'EUR';
+
+    it('returns empty bounding collection and null previous/next when no data exists', function () use ($baseCurrency, $targetCurrency) {
+        $target = Carbon::parse('2024-01-08');
+
+        expect($this->repository->getBoundingHistoricalRates($baseCurrency, $targetCurrency, $target))->toBeEmpty();
+        expect($this->repository->getPreviousHistoricalRate($baseCurrency, $targetCurrency, $target))->toBeNull();
+        expect($this->repository->getNextHistoricalRate($baseCurrency, $targetCurrency, $target))->toBeNull();
+    });
+
+    it('returns two bounding records when target is between two dates', function () use ($baseCurrency, $targetCurrency) {
+        $dateBefore = Carbon::parse('2024-01-01');
+        $dateAfter = Carbon::parse('2024-01-15');
+        $target = Carbon::parse('2024-01-08');
+
+        $this->repository->updateExchangeRatesHistory($baseCurrency, ['EUR' => 0.90], $dateBefore);
+        $this->repository->updateExchangeRatesHistory($baseCurrency, ['EUR' => 0.95], $dateAfter);
+
+        $bounds = $this->repository->getBoundingHistoricalRates($baseCurrency, $targetCurrency, $target);
+
+        expect($bounds)->toHaveCount(2);
+        expect(Carbon::parse($bounds->first()->date_time)->toDateString())->toBe('2024-01-01');
+        expect(Carbon::parse($bounds->last()->date_time)->toDateString())->toBe('2024-01-15');
+    });
+
+    it('returns empty bounding collection when only rates on or before target exist', function () use ($baseCurrency, $targetCurrency) {
+        $target = Carbon::parse('2024-01-08');
+
+        $this->repository->updateExchangeRatesHistory($baseCurrency, ['EUR' => 0.90], Carbon::parse('2024-01-01'));
+        $this->repository->updateExchangeRatesHistory($baseCurrency, ['EUR' => 0.91], Carbon::parse('2024-01-05'));
+
+        expect($this->repository->getBoundingHistoricalRates($baseCurrency, $targetCurrency, $target))->toBeEmpty();
+        expect($this->repository->getPreviousHistoricalRate($baseCurrency, $targetCurrency, $target))->not->toBeNull();
+        expect($this->repository->getNextHistoricalRate($baseCurrency, $targetCurrency, $target))->toBeNull();
+    });
+
+    it('returns empty bounding collection when only rates on or after target exist', function () use ($baseCurrency, $targetCurrency) {
+        $target = Carbon::parse('2024-01-08');
+
+        $this->repository->updateExchangeRatesHistory($baseCurrency, ['EUR' => 0.95], Carbon::parse('2024-01-10'));
+        $this->repository->updateExchangeRatesHistory($baseCurrency, ['EUR' => 0.96], Carbon::parse('2024-01-15'));
+
+        expect($this->repository->getBoundingHistoricalRates($baseCurrency, $targetCurrency, $target))->toBeEmpty();
+        expect($this->repository->getPreviousHistoricalRate($baseCurrency, $targetCurrency, $target))->toBeNull();
+        expect($this->repository->getNextHistoricalRate($baseCurrency, $targetCurrency, $target))->not->toBeNull();
+    });
+
+    it('returns empty bounding collection when only a single record exists on the target date', function () use ($baseCurrency, $targetCurrency) {
+        $target = Carbon::parse('2024-01-08');
+
+        $this->repository->updateExchangeRatesHistory($baseCurrency, ['EUR' => 0.92], $target);
+
+        expect($this->repository->getBoundingHistoricalRates($baseCurrency, $targetCurrency, $target))->toBeEmpty();
+        expect($this->repository->getPreviousHistoricalRate($baseCurrency, $targetCurrency, $target))->not->toBeNull();
+        expect($this->repository->getNextHistoricalRate($baseCurrency, $targetCurrency, $target))->not->toBeNull();
+    });
+
+    it('returns the latest rate on or before target from getPreviousHistoricalRate', function () use ($baseCurrency, $targetCurrency) {
+        $target = Carbon::parse('2024-01-08');
+
+        $this->repository->updateExchangeRatesHistory($baseCurrency, ['EUR' => 0.88], Carbon::parse('2024-01-01'));
+        $this->repository->updateExchangeRatesHistory($baseCurrency, ['EUR' => 0.91], Carbon::parse('2024-01-05'));
+
+        $previous = $this->repository->getPreviousHistoricalRate($baseCurrency, $targetCurrency, $target);
+
+        expect($previous)->not->toBeNull();
+        expect(Carbon::parse($previous->date_time)->toDateString())->toBe('2024-01-05');
+        expect((float) $previous->exchange_rate)->toBe(0.91);
+    });
+
+    it('returns the earliest rate on or after target from getNextHistoricalRate', function () use ($baseCurrency, $targetCurrency) {
+        $target = Carbon::parse('2024-01-08');
+
+        $this->repository->updateExchangeRatesHistory($baseCurrency, ['EUR' => 0.93], Carbon::parse('2024-01-10'));
+        $this->repository->updateExchangeRatesHistory($baseCurrency, ['EUR' => 0.96], Carbon::parse('2024-01-15'));
+
+        $next = $this->repository->getNextHistoricalRate($baseCurrency, $targetCurrency, $target);
+
+        expect($next)->not->toBeNull();
+        expect(Carbon::parse($next->date_time)->toDateString())->toBe('2024-01-10');
+        expect((float) $next->exchange_rate)->toBe(0.93);
+    });
+});
