@@ -20,14 +20,24 @@ Main contract for exchange rate operations.
 
 ##### `isSupportHistoricalExchangeRate(): bool`
 
-Checks if the service supports historical exchange rates.
+Returns whether the service can read historical rates from the database.
 
-**Returns:** `bool` - True if historical data is supported
+**Returns:** `bool` — true if historical data is supported.
 
 **Example:**
 ```php
 $service = app(ExchangeRateServiceInterface::class);
 $supportsHistorical = $service->isSupportHistoricalExchangeRate();
+```
+
+##### `supportsHistoricalApiFetch(): bool`
+
+Returns whether the service will call an external API to fetch and store a missing historical rate (Open Exchange Rates and Exchange Rate API: yes; World Bank: no).
+
+**Example:**
+```php
+$service = app(ExchangeRateServiceInterface::class);
+$canAutoFetch = $service->supportsHistoricalApiFetch();
 ```
 
 ##### `storeExchangeRates(string $currency_code): Collection`

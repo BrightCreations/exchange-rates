@@ -13,6 +13,11 @@ interface ExchangeRateServiceInterface
     public function isSupportHistoricalExchangeRate(): bool;
 
     /**
+     * Check if the service can auto-fetch historical rates from an external API on cache miss.
+     */
+    public function supportsHistoricalApiFetch(): bool;
+
+    /**
      * Store exchange rates in the database
      *
      *

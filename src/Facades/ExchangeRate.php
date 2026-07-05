@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static bool isSupportHistoricalExchangeRate()
+ * @method static bool supportsHistoricalApiFetch()
  * @method static Collection<CurrencyExchangeRate> storeExchangeRates(string $currency_code)
  * @method static Collection<CurrencyExchangeRate> storeBulkExchangeRatesForMultipleCurrencies(array $currencies_codes)
  * @method static Collection<CurrencyExchangeRate> getExchangeRates(string $currency_code)

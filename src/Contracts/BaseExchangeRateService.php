@@ -9,6 +9,11 @@ abstract class BaseExchangeRateService implements ExchangeRateServiceInterface
         return $this instanceof HistoricalSupportExchangeRateServiceInterface;
     }
 
+    public function supportsHistoricalApiFetch(): bool
+    {
+        return false;
+    }
+
     /**
      * Get the provider name (short class name) for this service
      */

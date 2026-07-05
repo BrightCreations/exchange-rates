@@ -73,6 +73,11 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
             ->throw();
     }
 
+    public function supportsHistoricalApiFetch(): bool
+    {
+        return true;
+    }
+
     /**
      * Store exchange rates in the database
      *

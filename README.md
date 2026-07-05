@@ -89,6 +89,15 @@ When consuming historical rates (e.g. via [brightcreations/money-converter](http
 
 See [money-converter historical conversion docs](https://github.com/BrightCreations/money-converter#historical-conversion) for how `fetchOnFail`, `interpolate()`, and `extrapolate()` use these capabilities.
 
+Programmatic check:
+
+```php
+use BrightCreations\ExchangeRates\Facades\ExchangeRate;
+
+ExchangeRate::supportsHistoricalApiFetch(); // true when provider auto-fetches on historical miss
+ExchangeRate::isSupportHistoricalExchangeRate(); // true when historical DB reads are available
+```
+
 ---
 
 ## Consuming with money-converter

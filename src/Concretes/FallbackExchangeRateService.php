@@ -242,6 +242,23 @@ class FallbackExchangeRateService extends BaseExchangeRateService implements Exc
         return $this->currentService;
     }
 
+    public function supportsHistoricalApiFetch(): bool
+    {
+        if ($this->currentService !== null) {
+            return $this->currentService->supportsHistoricalApiFetch();
+        }
+
+        foreach ($this->fallbackServices as $serviceClass) {
+            $service = app()->make($serviceClass);
+
+            if ($service instanceof ExchangeRateServiceInterface && $service->supportsHistoricalApiFetch()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Get the list of fallback services.
      *

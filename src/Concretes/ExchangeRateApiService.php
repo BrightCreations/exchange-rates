@@ -79,6 +79,11 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
             ->throw();
     }
 
+    public function supportsHistoricalApiFetch(): bool
+    {
+        return true;
+    }
+
     /**
      * Store exchange rates in the database
      *
