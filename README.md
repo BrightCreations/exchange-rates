@@ -76,6 +76,21 @@ This library follows a clean, layered architecture:
 
 ---
 
+## Historical rate provider capabilities
+
+When consuming historical rates (e.g. via [brightcreations/money-converter](https://github.com/BrightCreations/money-converter) `fetchOnFail()`, `interpolate()`, or `extrapolate()`), provider behaviour varies:
+
+| Provider | Auto-fetch on `getHistoricalExchangeRate` miss | Granularity | Notes |
+|----------|-----------------------------------------------|-------------|-------|
+| `OpenExchangeRateService` | Yes | Daily | Fetches and stores on `ModelNotFoundException` |
+| `ExchangeRateApiService` | Yes | Daily | Same as Open Exchange Rates |
+| `WorldBankExchangeRateApiService` | No (DB only) | Yearly | Pre-populate with `php artisan exchange-rates:backfill` |
+| `FallbackExchangeRateService` | Delegates to fallback order | Per provider | First successful provider in `fallback_order` wins |
+
+See [money-converter historical conversion docs](https://github.com/BrightCreations/money-converter#historical-conversion) for how `fetchOnFail`, `interpolate()`, and `extrapolate()` use these capabilities.
+
+---
+
 ## 📚 Documentation
 
 - **[Installation & Configuration](docs/installation.md)** - Detailed setup instructions
