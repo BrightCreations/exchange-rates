@@ -20,7 +20,7 @@ beforeEach(function () {
 });
 
 test('fallback service uses correct fallback order from config', function () {
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
 
     $services = $fallbackService->getFallbackServices();
 
@@ -31,7 +31,7 @@ test('fallback service uses correct fallback order from config', function () {
 });
 
 test('fallback service can update fallback order', function () {
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
 
     $newOrder = [
         WorldBankExchangeRateApiService::class,
@@ -44,7 +44,7 @@ test('fallback service can update fallback order', function () {
 });
 
 test('fallback service initially has no current service', function () {
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
 
     expect($fallbackService->getCurrentService())->toBeNull();
 });
@@ -68,7 +68,7 @@ test('fallback service delegates getExchangeRates to first successful fallback s
     // Bind stub class to return our mock
     app()->bind($stubClass, fn () => $mockService);
 
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
     $fallbackService->setFallbackServices([$stubClass]);
 
     $result = $fallbackService->getExchangeRates('USD');
@@ -92,7 +92,7 @@ test('fallback service delegates getAllExchangeRates to first successful fallbac
 
     app()->bind($stubClass, fn () => $mockService);
 
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
     $fallbackService->setFallbackServices([$stubClass]);
 
     $result = $fallbackService->getAllExchangeRates();
@@ -116,7 +116,7 @@ test('fallback service delegates storeExchangeRates to first successful fallback
 
     app()->bind($stubClass, fn () => $mockService);
 
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
     $fallbackService->setFallbackServices([$stubClass]);
 
     $result = $fallbackService->storeExchangeRates('USD');
@@ -150,7 +150,7 @@ test('fallback service skips to next service when first returns empty collection
     app()->bind($firstStub, fn () => $firstMock);
     app()->bind($secondStub, fn () => $secondMock);
 
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
     $fallbackService->setFallbackServices([$firstStub, $secondStub]);
 
     $result = $fallbackService->getExchangeRates('USD');
@@ -167,7 +167,7 @@ test('fallback service skips to next service when first throws exception', funct
     $firstMock->shouldReceive('getExchangeRates')
         ->with('USD')
         ->once()
-        ->andThrow(new \RuntimeException('API unavailable'));
+        ->andThrow(new RuntimeException('API unavailable'));
 
     $secondMock = Mockery::mock(ExchangeRateServiceInterface::class);
     $secondMock->shouldReceive('getExchangeRates')
@@ -183,7 +183,7 @@ test('fallback service skips to next service when first throws exception', funct
     app()->bind($firstStub, fn () => $firstMock);
     app()->bind($secondStub, fn () => $secondMock);
 
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
     $fallbackService->setFallbackServices([$firstStub, $secondStub]);
 
     $result = $fallbackService->getExchangeRates('USD');
@@ -196,18 +196,18 @@ test('fallback service throws RuntimeException when all services fail', function
     $mockService->shouldReceive('getExchangeRates')
         ->with('USD')
         ->once()
-        ->andThrow(new \RuntimeException('All APIs down'));
+        ->andThrow(new RuntimeException('All APIs down'));
 
     $stubClass = 'StubServiceAllFail_'.uniqid();
     eval("class {$stubClass} {}");
 
     app()->bind($stubClass, fn () => $mockService);
 
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
     $fallbackService->setFallbackServices([$stubClass]);
 
     expect(fn () => $fallbackService->getExchangeRates('USD'))
-        ->toThrow(\RuntimeException::class);
+        ->toThrow(RuntimeException::class);
 });
 
 test('fallback service sets current service on success', function () {
@@ -226,7 +226,7 @@ test('fallback service sets current service on success', function () {
 
     app()->bind($stubClass, fn () => $mockService);
 
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
     $fallbackService->setFallbackServices([$stubClass]);
 
     expect($fallbackService->getCurrentService())->toBeNull();
@@ -258,7 +258,7 @@ test('fallback service delegates getHistoricalExchangeRates through fallback ser
 
     app()->bind($stubClass, fn () => $mockService);
 
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
     $fallbackService->setFallbackServices([$stubClass]);
 
     $result = $fallbackService->getHistoricalExchangeRates('USD', $date);
@@ -286,7 +286,7 @@ test('fallback service delegates getHistoricalExchangeRate through fallback serv
 
     app()->bind($stubClass, fn () => $mockService);
 
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
     $fallbackService->setFallbackServices([$stubClass]);
 
     $result = $fallbackService->getHistoricalExchangeRate('USD', 'EUR', $date);
@@ -305,9 +305,9 @@ test('fallback service throws exception for historical methods when service does
 
     app()->bind($stubClass, fn () => $mockService);
 
-    $fallbackService = new FallbackExchangeRateService();
+    $fallbackService = new FallbackExchangeRateService;
     $fallbackService->setFallbackServices([$stubClass]);
 
     expect(fn () => $fallbackService->getHistoricalExchangeRates('USD', $date))
-        ->toThrow(\RuntimeException::class);
+        ->toThrow(RuntimeException::class);
 });

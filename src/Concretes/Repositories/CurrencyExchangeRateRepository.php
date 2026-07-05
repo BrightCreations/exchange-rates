@@ -5,6 +5,8 @@ namespace BrightCreations\ExchangeRates\Concretes\Repositories;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
+use BrightCreations\ExchangeRates\Dtos\ExchangeRatesDto;
+use BrightCreations\ExchangeRates\Dtos\HistoricalExchangeRatesDto;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRateHistory;
 use Carbon\Carbon;
@@ -17,8 +19,9 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     /**
      * Calculate the reversed exchange rate (1 / rate) with proper precision and rounding.
      *
-     * @param string|float|int $rate The exchange rate to reverse
+     * @param  string|float|int  $rate  The exchange rate to reverse
      * @return string The reversed exchange rate as a string with 10 decimal places
+     *
      * @throws \InvalidArgumentException If the rate is zero or invalid
      */
     private function calculateReversedRate($rate): string
@@ -64,7 +67,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     {
         $dataToInsert = [];
         foreach ($exchange_rates as $exchange_rate) {
-            if (! ($exchange_rate instanceof \BrightCreations\ExchangeRates\Dtos\ExchangeRatesDto)) {
+            if (! ($exchange_rate instanceof ExchangeRatesDto)) {
                 throw new \InvalidArgumentException('Exchange rate must be an instance of \BrightCreations\ExchangeRates\Dtos\ExchangeRatesDto');
             }
             foreach ($exchange_rate->getExchangeRates() as $code => $rate) {
@@ -130,7 +133,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     {
         $dataToInsert = [];
         foreach ($historical_exchange_rates as $historical_exchange_rate) {
-            if (! ($historical_exchange_rate instanceof \BrightCreations\ExchangeRates\Dtos\HistoricalExchangeRatesDto)) {
+            if (! ($historical_exchange_rate instanceof HistoricalExchangeRatesDto)) {
                 throw new \InvalidArgumentException('Historical exchange rate must be an instance of \BrightCreations\ExchangeRates\Dtos\HistoricalExchangeRatesDto');
             }
             foreach ($historical_exchange_rate->getExchangeRates() as $code => $rate) {
@@ -278,7 +281,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
             ->groupBy([
                 'base_currency_code',
                 fn ($item) => $item->target_currency_code,
-                fn ($item) => Carbon::parse($item->date_time)->format('Y-m-d')
+                fn ($item) => Carbon::parse($item->date_time)->format('Y-m-d'),
             ]);
     }
 

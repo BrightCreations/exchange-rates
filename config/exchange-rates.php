@@ -18,8 +18,8 @@ return [
     |
     */
     'routes' => [
-        'enabled'    => true,
-        'prefix'     => 'exchange-rates',
+        'enabled' => true,
+        'prefix' => 'exchange-rates',
         'middleware' => ['api'],
     ],
 

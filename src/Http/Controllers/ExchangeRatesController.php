@@ -29,9 +29,7 @@ class ExchangeRatesController extends Controller
      *     with each rate inverted (1 / stored_rate) using precise decimal math.
      *   - Optional `currencies` filters the returned source currencies.
      *
-     * @param  Request  $request
-     * @param  string   $currency  ISO 4217 currency code (3 letters)
-     * @return JsonResponse
+     * @param  string  $currency  ISO 4217 currency code (3 letters)
      */
     public function index(Request $request, string $currency): JsonResponse
     {
@@ -41,12 +39,12 @@ class ExchangeRatesController extends Controller
         ]);
 
         $validated = $request->validate([
-            'currency'   => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
-            'reversed'   => ['nullable', 'boolean'],
+            'currency' => ['required', 'string', 'size:3', 'regex:/^[A-Z]{3}$/'],
+            'reversed' => ['nullable', 'boolean'],
             'currencies' => ['nullable', 'string'],
         ]);
 
-        $code     = $validated['currency'];
+        $code = $validated['currency'];
         $reversed = (bool) ($validated['reversed'] ?? false);
 
         if ($reversed) {
@@ -74,10 +72,10 @@ class ExchangeRatesController extends Controller
         return response()->json([
             'data' => [
                 'base_currency' => $baseCurrency,
-                'rates'         => $rates->map(fn ($rate) => [
+                'rates' => $rates->map(fn ($rate) => [
                     'target_currency' => $rate->target_currency_code,
-                    'rate'            => $rate->exchange_rate,
-                    'last_updated'    => $rate->last_update_date,
+                    'rate' => $rate->exchange_rate,
+                    'last_updated' => $rate->last_update_date,
                 ])->values(),
             ],
         ]);
@@ -107,17 +105,17 @@ class ExchangeRatesController extends Controller
 
             return [
                 'source_currency' => $rate->target_currency_code,
-                'rate'            => BigDecimal::of(1)
+                'rate' => BigDecimal::of(1)
                     ->dividedBy($stored, 10, RoundingMode::HALF_UP)
                     ->__toString(),
-                'last_updated'    => $rate->last_update_date,
+                'last_updated' => $rate->last_update_date,
             ];
         })->filter()->values();
 
         return response()->json([
             'data' => [
                 'target_currency' => $targetCurrency,
-                'rates'           => $rates,
+                'rates' => $rates,
             ],
         ]);
     }

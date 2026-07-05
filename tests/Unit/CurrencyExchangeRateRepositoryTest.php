@@ -2,14 +2,17 @@
 
 namespace Tests\Unit;
 
+use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
+use BrightCreations\ExchangeRates\DTOs\CurrenciesPairDto;
 use BrightCreations\ExchangeRates\DTOs\ExchangeRatesDto;
 use BrightCreations\ExchangeRates\DTOs\HistoricalBaseCurrencyDto;
+use BrightCreations\ExchangeRates\DTOs\HistoricalCurrenciesPairDto;
 use BrightCreations\ExchangeRates\DTOs\HistoricalExchangeRatesDto;
 use Carbon\Carbon;
 
 beforeEach(function () {
     // Setup repository for each test
-    $this->repository = app(\BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface::class);
+    $this->repository = app(CurrencyExchangeRateRepositoryInterface::class);
 });
 
 describe('Update and retrieve exchange rates', function () {
@@ -325,10 +328,10 @@ describe('Retrieve single exchange rate for a pair and bulk exchange rates for m
         ]);
 
         $pairs = [
-            new \BrightCreations\ExchangeRates\DTOs\CurrenciesPairDto('USD', 'EUR'),
-            new \BrightCreations\ExchangeRates\DTOs\CurrenciesPairDto('USD', 'JPY'),
-            new \BrightCreations\ExchangeRates\DTOs\CurrenciesPairDto('EUR', 'USD'),
-            new \BrightCreations\ExchangeRates\DTOs\CurrenciesPairDto('EUR', 'JPY'),
+            new CurrenciesPairDto('USD', 'EUR'),
+            new CurrenciesPairDto('USD', 'JPY'),
+            new CurrenciesPairDto('EUR', 'USD'),
+            new CurrenciesPairDto('EUR', 'JPY'),
         ];
 
         // Act
@@ -381,10 +384,10 @@ describe('Retrieve single historical exchange rate for a pair and bulk historica
         ], $date2);
 
         $pairs = [
-            new \BrightCreations\ExchangeRates\DTOs\HistoricalCurrenciesPairDto('USD', 'EUR', $date1),
-            new \BrightCreations\ExchangeRates\DTOs\HistoricalCurrenciesPairDto('USD', 'JPY', $date1),
-            new \BrightCreations\ExchangeRates\DTOs\HistoricalCurrenciesPairDto('EUR', 'USD', $date2),
-            new \BrightCreations\ExchangeRates\DTOs\HistoricalCurrenciesPairDto('EUR', 'JPY', $date2),
+            new HistoricalCurrenciesPairDto('USD', 'EUR', $date1),
+            new HistoricalCurrenciesPairDto('USD', 'JPY', $date1),
+            new HistoricalCurrenciesPairDto('EUR', 'USD', $date2),
+            new HistoricalCurrenciesPairDto('EUR', 'JPY', $date2),
         ];
 
         // Act

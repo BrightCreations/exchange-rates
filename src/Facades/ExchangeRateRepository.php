@@ -11,7 +11,6 @@ use BrightCreations\ExchangeRates\DTOs\HistoricalExchangeRatesDto;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRateHistory;
 use Carbon\CarbonInterface;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Facade;
 

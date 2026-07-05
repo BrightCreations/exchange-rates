@@ -1,5 +1,7 @@
 <?php
 
+use BrightCreations\ExchangeRates\Tests\TestCase;
+
 /*
 |--------------------------------------------------------------------------
 | Test Case
@@ -11,7 +13,7 @@
 |
 */
 
-uses(\BrightCreations\ExchangeRates\Tests\TestCase::class)->in('Unit', 'Feature');
+uses(TestCase::class)->in('Unit', 'Feature');
 
 /*
 |--------------------------------------------------------------------------

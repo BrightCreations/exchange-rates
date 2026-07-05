@@ -14,8 +14,8 @@ use Illuminate\Support\Collection;
  * @property string $target_currency_code
  * @property string $exchange_rate
  * @property string|null $provider
- * @property \Carbon\Carbon|null $date_time
- * @property \Carbon\Carbon|null $last_update_date
+ * @property Carbon|null $date_time
+ * @property Carbon|null $last_update_date
  * @property-read string $table
  * @property-read string $tablename
  *
@@ -76,7 +76,7 @@ class CurrencyExchangeRateHistory extends Model
     /**
      * Create or update a currency exchange rate history record
      *
-     * @param array<string, mixed> $attributes The attributes to create or update
+     * @param  array<string, mixed>  $attributes  The attributes to create or update
      * @return static
      */
     public static function createOrUpdate($attributes)
@@ -108,7 +108,7 @@ class CurrencyExchangeRateHistory extends Model
     /**
      * Construct a CurrencyExchangeRateHistory model from a HistoricalExchangeRatesDto
      *
-     * @param HistoricalExchangeRatesDto $dto The historical exchange rates DTO to construct from
+     * @param  HistoricalExchangeRatesDto  $dto  The historical exchange rates DTO to construct from
      * @return Collection<CurrencyExchangeRateHistory>
      */
     public static function constructFromHistoricalExchangeRatesDto(HistoricalExchangeRatesDto $dto): Collection

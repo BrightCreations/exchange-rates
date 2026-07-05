@@ -5,10 +5,12 @@ use BrightCreations\ExchangeRates\DTOs\HistoricalBaseCurrencyDto;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRateHistory;
 use Carbon\Carbon;
+use GuzzleHttp\Psr7\Response;
+use Illuminate\Http\Client\PendingRequest;
 
 beforeEach(function () {
     // Setup repository for each test
-    $http = Mockery::mock(\Illuminate\Http\Client\PendingRequest::class, function ($mock) {
+    $http = Mockery::mock(PendingRequest::class, function ($mock) {
         $mock->shouldReceive('baseUrl')->andReturnSelf();
         $mock->shouldReceive('withHeaders')->andReturnSelf();
         $mock->shouldReceive('throw')->andReturnSelf();
@@ -21,8 +23,8 @@ beforeEach(function () {
                 // Optionally, you can modify $json based on $currency if needed
                 $json['base_code'] = $currency;
 
-                return new \Illuminate\Http\Client\Response(
-                    new \GuzzleHttp\Psr7\Response(200, [], json_encode($json))
+                return new Illuminate\Http\Client\Response(
+                    new Response(200, [], json_encode($json))
                 );
             }
             // Match /history/{currency}/...
@@ -37,14 +39,14 @@ beforeEach(function () {
                 $json['month'] = $month;
                 $json['day'] = $day;
 
-                return new \Illuminate\Http\Client\Response(
-                    new \GuzzleHttp\Psr7\Response(200, [], json_encode($json))
+                return new Illuminate\Http\Client\Response(
+                    new Response(200, [], json_encode($json))
                 );
             }
 
             // Default fallback
-            return new \Illuminate\Http\Client\Response(
-                new \GuzzleHttp\Psr7\Response(200, [], json_encode([]))
+            return new Illuminate\Http\Client\Response(
+                new Response(200, [], json_encode([]))
             );
         });
     });

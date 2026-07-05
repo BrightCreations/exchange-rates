@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
  * @property string $target_currency_code
  * @property string $exchange_rate
  * @property string|null $provider
- * @property \Carbon\Carbon|null $last_update_date
+ * @property Carbon|null $last_update_date
  * @property-read string $table
  * @property-read string $tablename
  *
@@ -73,7 +73,7 @@ class CurrencyExchangeRate extends Model
     /**
      * Create or update a currency exchange rate record
      *
-     * @param array<string, mixed> $attributes The attributes to create or update
+     * @param  array<string, mixed>  $attributes  The attributes to create or update
      * @return static
      */
     public static function createOrUpdate($attributes)
@@ -103,7 +103,7 @@ class CurrencyExchangeRate extends Model
     /**
      * Construct a CurrencyExchangeRate model from an ExchangeRatesDto
      *
-     * @param ExchangeRatesDto $dto The exchange rates DTO to construct from
+     * @param  ExchangeRatesDto  $dto  The exchange rates DTO to construct from
      * @return Collection<CurrencyExchangeRate>
      */
     public static function constructFromExchangeRatesDto(ExchangeRatesDto $dto): Collection

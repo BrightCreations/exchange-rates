@@ -5,25 +5,25 @@ use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
 beforeEach(function () {
     CurrencyExchangeRate::insert([
         [
-            'base_currency_code'   => 'USD',
+            'base_currency_code' => 'USD',
             'target_currency_code' => 'EUR',
-            'exchange_rate'        => '0.9200000000',
-            'provider'             => 'test',
-            'last_update_date'     => now(),
+            'exchange_rate' => '0.9200000000',
+            'provider' => 'test',
+            'last_update_date' => now(),
         ],
         [
-            'base_currency_code'   => 'USD',
+            'base_currency_code' => 'USD',
             'target_currency_code' => 'GBP',
-            'exchange_rate'        => '0.7800000000',
-            'provider'             => 'test',
-            'last_update_date'     => now(),
+            'exchange_rate' => '0.7800000000',
+            'provider' => 'test',
+            'last_update_date' => now(),
         ],
         [
-            'base_currency_code'   => 'USD',
+            'base_currency_code' => 'USD',
             'target_currency_code' => 'SAR',
-            'exchange_rate'        => '3.7500000000',
-            'provider'             => 'test',
-            'last_update_date'     => now(),
+            'exchange_rate' => '3.7500000000',
+            'provider' => 'test',
+            'last_update_date' => now(),
         ],
     ]);
 });
@@ -136,18 +136,18 @@ describe('reversed mode', function () {
         // Seed extra rows so multiple bases point to EUR
         CurrencyExchangeRate::insert([
             [
-                'base_currency_code'   => 'GBP',
+                'base_currency_code' => 'GBP',
                 'target_currency_code' => 'EUR',
-                'exchange_rate'        => '1.1800000000',
-                'provider'             => 'test',
-                'last_update_date'     => now(),
+                'exchange_rate' => '1.1800000000',
+                'provider' => 'test',
+                'last_update_date' => now(),
             ],
             [
-                'base_currency_code'   => 'SAR',
+                'base_currency_code' => 'SAR',
                 'target_currency_code' => 'EUR',
-                'exchange_rate'        => '0.2453000000',
-                'provider'             => 'test',
-                'last_update_date'     => now(),
+                'exchange_rate' => '0.2453000000',
+                'provider' => 'test',
+                'last_update_date' => now(),
             ],
         ]);
     });
