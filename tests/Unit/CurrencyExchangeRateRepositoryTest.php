@@ -487,3 +487,48 @@ describe('Bounding historical rates', function () {
         expect((float) $next->exchange_rate)->toBe(0.93);
     });
 });
+
+describe('Bulk bounding historical rates', function () {
+    it('returns bounds keyed by dto string for a single pair and date', function () {
+        $dateBefore = Carbon::parse('2024-01-01');
+        $dateAfter = Carbon::parse('2024-01-15');
+        $target = Carbon::parse('2024-01-08');
+
+        $this->repository->updateExchangeRatesHistory('USD', ['EUR' => 0.90], $dateBefore);
+        $this->repository->updateExchangeRatesHistory('USD', ['EUR' => 0.95], $dateAfter);
+
+        $dto = new HistoricalCurrenciesPairDto('USD', 'EUR', $target);
+        $result = $this->repository->getBulkBoundingHistoricalRates([$dto]);
+
+        expect($result)->toHaveKey((string) $dto);
+        expect($result[(string) $dto])->toHaveCount(2);
+    });
+
+    it('returns bounds for multiple dates on the same pair in one call', function () {
+        $this->repository->updateExchangeRatesHistory('USD', ['EUR' => 0.90], Carbon::parse('2024-01-01'));
+        $this->repository->updateExchangeRatesHistory('USD', ['EUR' => 0.95], Carbon::parse('2024-01-15'));
+
+        $pairs = [
+            new HistoricalCurrenciesPairDto('USD', 'EUR', Carbon::parse('2024-01-05')),
+            new HistoricalCurrenciesPairDto('USD', 'EUR', Carbon::parse('2024-01-08')),
+            new HistoricalCurrenciesPairDto('USD', 'EUR', Carbon::parse('2024-01-10')),
+        ];
+
+        $result = $this->repository->getBulkBoundingHistoricalRates($pairs);
+
+        expect($result)->toHaveCount(3);
+        expect($result[(string) $pairs[0]])->toHaveCount(2);
+        expect($result[(string) $pairs[1]])->toHaveCount(2);
+        expect($result[(string) $pairs[2]])->toHaveCount(2);
+    });
+
+    it('returns empty bounds when only a single rate exists on the target date', function () {
+        $target = Carbon::parse('2024-01-08');
+        $this->repository->updateExchangeRatesHistory('USD', ['EUR' => 0.92], $target);
+
+        $dto = new HistoricalCurrenciesPairDto('USD', 'EUR', $target);
+        $result = $this->repository->getBulkBoundingHistoricalRates([$dto]);
+
+        expect($result[(string) $dto])->toBeEmpty();
+    });
+});

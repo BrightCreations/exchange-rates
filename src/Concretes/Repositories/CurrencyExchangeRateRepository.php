@@ -6,6 +6,7 @@ use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
 use BrightCreations\ExchangeRates\Dtos\ExchangeRatesDto;
+use BrightCreations\ExchangeRates\DTOs\HistoricalCurrenciesPairDto;
 use BrightCreations\ExchangeRates\Dtos\HistoricalExchangeRatesDto;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRateHistory;
@@ -326,6 +327,87 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
         }
 
         // If both bounds resolve to the same underlying record, we don't have a proper interval
+        if ($before->is($after)) {
+            return collect();
+        }
+
+        return collect([$before, $after]);
+    }
+
+    /**
+     * @param  HistoricalCurrenciesPairDto[]  $historical_currencies_pairs
+     * @return Collection<string, Collection<CurrencyExchangeRateHistory>>
+     */
+    public function getBulkBoundingHistoricalRates(array $historical_currencies_pairs): Collection
+    {
+        /** @var array<string, HistoricalCurrenciesPairDto> $uniqueDtos */
+        $uniqueDtos = [];
+
+        foreach ($historical_currencies_pairs as $dto) {
+            $uniqueDtos[(string) $dto] = $dto;
+        }
+
+        /** @var array<string, list<HistoricalCurrenciesPairDto>> $byPair */
+        $byPair = [];
+
+        foreach ($uniqueDtos as $dto) {
+            $pairKey = $dto->getBaseCurrencyCode().'_'.$dto->getTargetCurrencyCode();
+            $byPair[$pairKey][] = $dto;
+        }
+
+        $results = collect();
+
+        foreach ($byPair as $dtos) {
+            if (count($dtos) === 1) {
+                $dto = $dtos[0];
+                $results[(string) $dto] = $this->getBoundingHistoricalRates(
+                    $dto->getBaseCurrencyCode(),
+                    $dto->getTargetCurrencyCode(),
+                    $dto->getDateTime(),
+                );
+
+                continue;
+            }
+
+            $first = $dtos[0];
+            $rates = CurrencyExchangeRateHistory::where([
+                'base_currency_code' => $first->getBaseCurrencyCode(),
+                'target_currency_code' => $first->getTargetCurrencyCode(),
+            ])->orderBy('date_time')->get();
+
+            foreach ($dtos as $dto) {
+                $results[(string) $dto] = $this->computeBoundingFromRates($rates, $dto->getDateTime());
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * @param  Collection<int, CurrencyExchangeRateHistory>  $rates
+     * @return Collection<int, CurrencyExchangeRateHistory>
+     */
+    private function computeBoundingFromRates(Collection $rates, CarbonInterface $targetDate): Collection
+    {
+        $before = null;
+        $after = null;
+
+        foreach ($rates as $rate) {
+            $dateTime = $rate->date_time instanceof CarbonInterface
+                ? $rate->date_time
+                : Carbon::parse($rate->date_time);
+
+            if ($dateTime <= $targetDate) {
+                $before = $rate;
+            } elseif ($after === null) {
+                $after = $rate;
+            }
+        }
+
+        if (! $before || ! $after) {
+            return collect();
+        }
+
         if ($before->is($after)) {
             return collect();
         }

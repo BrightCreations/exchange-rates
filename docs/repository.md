@@ -432,6 +432,20 @@ if ($bounds->count() === 2) {
 }
 ```
 
+### getBulkBoundingHistoricalRates()
+
+Batch version of `getBoundingHistoricalRates()` for multiple pair-and-date requests. Accepts `HistoricalCurrenciesPairDto[]` and returns a collection keyed by each DTO string (e.g. `USD_EUR_2024-01-08`). Values are collections of zero or two `CurrencyExchangeRateHistory` models with the same semantics as the single-pair method.
+
+When several dates share the same currency pair, the repository loads that pair's history once and computes bounds in PHP.
+
+```php
+$pairs = [
+    new HistoricalCurrenciesPairDto('USD', 'EUR', Carbon::parse('2024-01-05')),
+    new HistoricalCurrenciesPairDto('USD', 'EUR', Carbon::parse('2024-01-08')),
+];
+$bounds = $repository->getBulkBoundingHistoricalRates($pairs);
+```
+
 ### Interpolation (money-converter)
 
 This package supplies bounding data only. **Linear interpolation** between two bounding rates is implemented in [brightcreations/money-converter](https://github.com/BrightCreations/money-converter) via `MoneyConverter::interpolate()` and `ExchangeRateRepository::getBoundingHistoricalRates()`.

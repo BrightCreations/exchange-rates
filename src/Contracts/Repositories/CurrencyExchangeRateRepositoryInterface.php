@@ -140,4 +140,12 @@ interface CurrencyExchangeRateRepositoryInterface
      * @return Collection<CurrencyExchangeRateHistory>
      */
     public function getBoundingHistoricalRates(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): Collection;
+
+    /**
+     * Get bounding historical rates for multiple currency pair and date combinations.
+     *
+     * @param  HistoricalCurrenciesPairDto[]  $historical_currencies_pairs
+     * @return Collection<string, Collection<CurrencyExchangeRateHistory>> keyed by DTO string (e.g. USD_EUR_2024-01-08)
+     */
+    public function getBulkBoundingHistoricalRates(array $historical_currencies_pairs): Collection;
 }
