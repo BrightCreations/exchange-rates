@@ -2,7 +2,7 @@
     "type": "library",
     "name": "brightcreations/exchange-rates",
     "description": "A Laravel package for fetching exchange rates from various sources.",
-    "version": "v0.8.8",
+    "version": "v0.9.0",
     "license": "MIT",
     "authors": [
         {
