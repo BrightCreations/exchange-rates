@@ -436,6 +436,41 @@ if ($bounds->count() === 2) {
 
 This package supplies bounding data only. **Linear interpolation** between two bounding rates is implemented in [brightcreations/money-converter](https://github.com/BrightCreations/money-converter) via `MoneyConverter::interpolate()` and `ExchangeRateRepository::getBoundingHistoricalRates()`.
 
+## Date and datetime semantics
+
+Historical repository methods do not all treat `Carbon` values the same way. When integrating with money-converter or writing tests, match the method you call to the precision you need.
+
+| Method | Matching |
+|--------|----------|
+| `getHistoricalExchangeRate`, `getHistoricalExchangeRates` | **Date portion only** — uses `whereDate('date_time', …)` |
+| `getPreviousHistoricalRate`, `getNextHistoricalRate`, `getBoundingHistoricalRates` | **Full datetime** — uses `date_time <=` / `date_time >=` |
+
+**Practical guidance:**
+
+- For exact-day lookups (e.g. “rate on 2024-01-15”), pass `Carbon::parse('2024-01-15')->startOfDay()` and use `getHistoricalExchangeRate` / money-converter’s historical exact-match path.
+- For interpolation or nearest-neighbour bounds, pass the precise target instant; bounding methods compare the full `date_time` column.
+- See the [money-converter historical conversion](https://github.com/BrightCreations/money-converter#historical-conversion) section for how the fallback chain uses these methods.
+
+## Testing with seed helpers
+
+Package tests can seed PDO rates without calling external APIs using the `SeedsExchangeRateTables` trait in `tests/Concerns/SeedsExchangeRateTables.php`:
+
+```php
+use BrightCreations\ExchangeRates\Tests\Concerns\SeedsExchangeRateTables;
+
+uses(SeedsExchangeRateTables::class);
+
+it('reads a historical rate', function () {
+    $date = Carbon::parse('2024-01-15')->startOfDay();
+    $this->seedHistoricalRate('USD', 'EUR', 0.88, $date);
+
+    expect($this->repository()->getHistoricalExchangeRate('USD', 'EUR', $date)->exchange_rate)
+        ->toBe('0.88');
+});
+```
+
+**Consumers** (e.g. money-converter) should copy this pattern in their own test suite rather than depending on exchange-rates test code. money-converter ships an equivalent `SeedsExchangeRates` trait for Testbench tests.
+
 ## Why DTOs?
 
 DTOs provide several benefits in repository operations:
