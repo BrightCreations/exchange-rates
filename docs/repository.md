@@ -21,21 +21,25 @@ use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRep
 interface CurrencyExchangeRateRepositoryInterface
 {
     // Current exchange rates
-    public function updateExchangeRates(string $base_currency_code, array $exchange_rates): bool;
-    public function updateBulkExchangeRates(array $exchange_rates): bool;
+    public function updateExchangeRates(string $base_currency_code, array $exchange_rates, ?string $provider = null): bool;
+    public function updateBulkExchangeRates(array $exchange_rates, ?string $provider = null): bool;
     public function getAllExchangeRates(): Collection;
     public function getExchangeRates(string $base_currency_code): Collection;
+    public function getExchangeRatesByTargetCurrency(string $target_currency_code): Collection;
     public function getBulkExchangeRates(array $base_currency_codes): Collection;
     public function getExchangeRate(string $base_currency_code, string $target_currency_code): CurrencyExchangeRate;
     public function getBulkExchangeRate(array $currencies_pairs): Collection;
 
     // Historical exchange rates
-    public function updateExchangeRatesHistory(string $base_currency_code, array $exchange_rates, CarbonInterface $date_time): bool;
-    public function updateBulkExchangeRatesHistory(array $historical_exchange_rates): bool;
+    public function updateExchangeRatesHistory(string $base_currency_code, array $exchange_rates, CarbonInterface $date_time, ?string $provider = null): bool;
+    public function updateBulkExchangeRatesHistory(array $historical_exchange_rates, ?string $provider = null): bool;
     public function getHistoricalExchangeRates(string $base_currency_code, CarbonInterface $date_time): Collection;
     public function getBulkHistoricalExchangeRates(array $historical_base_currencies): Collection;
     public function getHistoricalExchangeRate(string $base_currency_code, string $target_currency_code, CarbonInterface $date_time): CurrencyExchangeRateHistory;
     public function getBulkHistoricalExchangeRate(array $historical_currencies_pairs): Collection;
+    public function getPreviousHistoricalRate(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): ?CurrencyExchangeRateHistory;
+    public function getNextHistoricalRate(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): ?CurrencyExchangeRateHistory;
+    public function getBoundingHistoricalRates(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): Collection;
 }
 ```
 
@@ -205,6 +209,18 @@ $rates = $repository->getExchangeRates('USD');
 // Returns Collection<CurrencyExchangeRate>
 foreach ($rates as $rate) {
     echo "USD to {$rate->target_currency_code}: {$rate->exchange_rate}\n";
+}
+```
+
+#### getExchangeRatesByTargetCurrency()
+
+Retrieves all stored rates that point **to** a given target currency (useful for reversed lookups):
+
+```php
+$rates = $repository->getExchangeRatesByTargetCurrency('EUR');
+
+foreach ($rates as $rate) {
+    echo "{$rate->base_currency_code} to EUR: {$rate->exchange_rate}\n";
 }
 ```
 

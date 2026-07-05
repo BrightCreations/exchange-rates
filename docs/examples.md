@@ -888,6 +888,34 @@ class CustomMappingService
 }
 ```
 
+## With money-converter
+
+After storing historical rates with this package, use [brightcreations/money-converter](https://github.com/BrightCreations/money-converter) to convert amounts. See the [money-converter integration guide](https://github.com/BrightCreations/money-converter#integration-guide) for full setup.
+
+```php
+<?php
+
+use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
+use BrightCreations\MoneyConverter\Facades\MoneyConverter;
+use Carbon\Carbon;
+
+// 1. Seed historical rates (exchange-rates repository)
+$repository = app(CurrencyExchangeRateRepositoryInterface::class);
+
+$repository->updateExchangeRatesHistory('USD', [
+    'EUR' => 0.90,
+], Carbon::parse('2024-01-01'));
+
+$repository->updateExchangeRatesHistory('USD', [
+    'EUR' => 0.95,
+], Carbon::parse('2024-01-15'));
+
+// 2. Convert with interpolation for a date between the two stored rates (money-converter)
+$eurCents = MoneyConverter::interpolate()
+    ->convertHistorical(10000, 'USD', 'EUR', Carbon::parse('2024-01-08'));
+// 10000 USD cents → EUR cents using interpolated rate
+```
+
 ## Related Documentation
 
 - **[Installation & Configuration](installation.md)** - Setup instructions

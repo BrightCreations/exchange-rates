@@ -91,6 +91,18 @@ See [money-converter historical conversion docs](https://github.com/BrightCreati
 
 ---
 
+## Consuming with money-converter
+
+[brightcreations/money-converter](https://github.com/BrightCreations/money-converter) is the recommended package for **currency conversion** in Laravel apps that use this library.
+
+1. Install both packages: `composer require brightcreations/money-converter brightcreations/exchange-rates`
+2. Follow the [money-converter integration guide](https://github.com/BrightCreations/money-converter#integration-guide) to publish configs, migrate, and populate rates
+3. money-converter's default PDO provider reads the same `currency_exchange_rates` tables this package writes
+
+**Version requirement:** money-converter `^0.6.0` requires exchange-rates `^0.8.0` for bounding-rate repository methods used by interpolation and extrapolation.
+
+---
+
 ## 📚 Documentation
 
 - **[Installation & Configuration](docs/installation.md)** - Detailed setup instructions
