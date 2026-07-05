@@ -5,6 +5,7 @@ namespace BrightCreations\ExchangeRates\Http\Controllers;
 use Brick\Math\BigDecimal;
 use Brick\Math\RoundingMode;
 use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
+use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -13,6 +14,7 @@ class ExchangeRatesController extends Controller
 {
     public function __construct(
         private ExchangeRateServiceInterface $exchangeRateService,
+        private CurrencyExchangeRateRepositoryInterface $exchangeRateRepository,
     ) {}
 
     /**
@@ -86,14 +88,10 @@ class ExchangeRatesController extends Controller
      */
     private function reversedResponse(string $targetCurrency, ?string $currenciesParam): JsonResponse
     {
-        try {
-            $rates = $this->exchangeRateService->getExchangeRates($targetCurrency);
-        } catch (\RuntimeException) {
-            $rates = collect();
-        }
+        $rates = $this->exchangeRateRepository->getExchangeRatesByTargetCurrency($targetCurrency);
 
         if (! empty($currenciesParam)) {
-            $rates = $rates->whereIn('target_currency_code', $this->parseCurrencyList($currenciesParam))->values();
+            $rates = $rates->whereIn('base_currency_code', $this->parseCurrencyList($currenciesParam))->values();
         }
 
         $rates = $rates->map(function ($rate) {
@@ -104,7 +102,7 @@ class ExchangeRatesController extends Controller
             }
 
             return [
-                'source_currency' => $rate->target_currency_code,
+                'source_currency' => $rate->base_currency_code,
                 'rate' => BigDecimal::of(1)
                     ->dividedBy($stored, 10, RoundingMode::HALF_UP)
                     ->__toString(),
