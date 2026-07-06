@@ -3,7 +3,6 @@
 namespace BrightCreations\ExchangeRates\Http\Controllers;
 
 use Brick\Math\BigDecimal;
-use Brick\Math\RoundingMode;
 use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
 use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
 use Illuminate\Http\JsonResponse;
@@ -27,8 +26,8 @@ class ExchangeRatesController extends Controller
      *
      * Reversed mode (reversed=true):
      *   - {currency} is treated as the TARGET currency.
-     *   - Returns all base currencies that store a rate to this target,
-     *     with each rate inverted (1 / stored_rate) using precise decimal math.
+     *   - Returns all base currencies that store a rate to this target.
+     *   - Each rate is the stored source→target value (not inverted).
      *   - Optional `currencies` filters the returned source currencies.
      *
      * @param  string  $currency  ISO 4217 currency code (3 letters)
@@ -84,7 +83,7 @@ class ExchangeRatesController extends Controller
     }
 
     /**
-     * Reversed mode: {currency} is the target, return inverted rates from all sources.
+     * Reversed mode: {currency} is the target, return stored source→target rates.
      */
     private function reversedResponse(string $targetCurrency, ?string $currenciesParam): JsonResponse
     {
@@ -103,9 +102,7 @@ class ExchangeRatesController extends Controller
 
             return [
                 'source_currency' => $rate->base_currency_code,
-                'rate' => BigDecimal::of(1)
-                    ->dividedBy($stored, 10, RoundingMode::HALF_UP)
-                    ->__toString(),
+                'rate' => $stored->__toString(),
                 'last_updated' => $rate->last_update_date,
             ];
         })->filter()->values();

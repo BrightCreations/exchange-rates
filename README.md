@@ -259,7 +259,7 @@ GET /api/exchange-rates/USD?currencies=EUR,SAR
 GET /api/exchange-rates/{currency}?reversed=true
 ```
 
-`{currency}` becomes the **target** currency. Returns all stored source currencies that have a rate pointing to this target, with each rate inverted (`1 / stored_rate`) using precise decimal arithmetic (`brick/math`, HALF_UP, 10 decimal places).
+`{currency}` becomes the **target** currency. Returns all stored source currencies that have a rate pointing to this target. Each `rate` is the stored **source → target** value (same direction as `source_currency` → `target_currency`).
 
 | Parameter    | Location     | Required | Description |
 |--------------|--------------|----------|-------------|
@@ -278,9 +278,9 @@ GET /api/exchange-rates/EUR?reversed=true
     "data": {
         "target_currency": "EUR",
         "rates": [
-            { "source_currency": "USD", "rate": "1.0869565217", "last_updated": "2026-03-09T00:00:00.000000Z" },
-            { "source_currency": "GBP", "rate": "0.8474576271", "last_updated": "2026-03-09T00:00:00.000000Z" },
-            { "source_currency": "SAR", "rate": "4.0765593966", "last_updated": "2026-03-09T00:00:00.000000Z" }
+            { "source_currency": "USD", "rate": "0.9200000000", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "source_currency": "GBP", "rate": "1.1800000000", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "source_currency": "SAR", "rate": "0.2453000000", "last_updated": "2026-03-09T00:00:00.000000Z" }
         ]
     }
 }
@@ -297,8 +297,27 @@ GET /api/exchange-rates/EUR?reversed=true&currencies=USD,SAR
     "data": {
         "target_currency": "EUR",
         "rates": [
-            { "source_currency": "USD", "rate": "1.0869565217", "last_updated": "2026-03-09T00:00:00.000000Z" },
-            { "source_currency": "SAR", "rate": "4.0765593966", "last_updated": "2026-03-09T00:00:00.000000Z" }
+            { "source_currency": "USD", "rate": "0.9200000000", "last_updated": "2026-03-09T00:00:00.000000Z" },
+            { "source_currency": "SAR", "rate": "0.2453000000", "last_updated": "2026-03-09T00:00:00.000000Z" }
+        ]
+    }
+}
+```
+
+#### Example — reciprocal pair lookup
+
+Equivalent to `GET /api/exchange-rates/GBP?currencies=USD` when a `GBP→USD` row is stored:
+
+```
+GET /api/exchange-rates/USD?reversed=true&currencies=GBP
+```
+
+```json
+{
+    "data": {
+        "target_currency": "USD",
+        "rates": [
+            { "source_currency": "GBP", "rate": "1.3352310000", "last_updated": "2026-03-09T00:00:00.000000Z" }
         ]
     }
 }

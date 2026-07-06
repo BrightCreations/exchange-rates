@@ -128,7 +128,7 @@ it('rejects a currency code containing non-letter characters', function () {
 
 // ---------------------------------------------------------------------------
 // reversed=true  GET /api/exchange-rates/{currency}?reversed=true
-// {currency} is the TARGET; returns source currencies with inverted rates
+// {currency} is the TARGET; returns stored source→target rates
 // ---------------------------------------------------------------------------
 
 describe('reversed mode', function () {
@@ -181,18 +181,35 @@ describe('reversed mode', function () {
             ->assertJsonPath('data.target_currency', 'EUR');
     });
 
-    it('returns accurately inverted rates', function () {
+    it('returns stored source to target rates without inversion', function () {
         $response = $this->getJson('/api/exchange-rates/EUR?reversed=true');
 
         $rates = collect($response->json('data.rates'))->keyBy('source_currency');
 
-        // Stored USD→EUR = 0.9200000000 ∴ inverted = 1/0.92 ≈ 1.0869565217
-        $usdRate = $rates->get('USD')['rate'];
-        expect(bccomp($usdRate, bcdiv('1', '0.9200000000', 10), 10))->toBe(0);
+        // Stored USD→EUR = 0.9200000000
+        expect($rates->get('USD')['rate'])->toBe('0.9200000000');
 
-        // Stored GBP→EUR = 1.1800000000 ∴ inverted = 1/1.18 ≈ 0.8474576271
-        $gbpRate = $rates->get('GBP')['rate'];
-        expect(bccomp($gbpRate, bcdiv('1', '1.1800000000', 10), 10))->toBe(0);
+        // Stored GBP→EUR = 1.1800000000
+        expect($rates->get('GBP')['rate'])->toBe('1.1800000000');
+    });
+
+    it('returns reciprocal pair rate when path is target and currencies filter is source', function () {
+        CurrencyExchangeRate::insert([
+            [
+                'base_currency_code' => 'GBP',
+                'target_currency_code' => 'USD',
+                'exchange_rate' => '1.3352310000',
+                'provider' => 'test',
+                'last_update_date' => now(),
+            ],
+        ]);
+
+        $response = $this->getJson('/api/exchange-rates/USD?reversed=true&currencies=GBP');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.target_currency', 'USD')
+            ->assertJsonPath('data.rates.0.source_currency', 'GBP')
+            ->assertJsonPath('data.rates.0.rate', '1.3352310000');
     });
 
     it('filters results by sources query parameter', function () {
