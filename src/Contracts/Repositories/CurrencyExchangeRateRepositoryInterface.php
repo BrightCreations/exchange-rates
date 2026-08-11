@@ -119,6 +119,16 @@ interface CurrencyExchangeRateRepositoryInterface
     public function getBulkHistoricalExchangeRate(array $historical_currencies_pairs): Collection;
 
     /**
+     * Get the daily historical exchange rates for a currency pair within a date period (inclusive),
+     * ordered by date ascending. At most one record per day.
+     *
+     * @return Collection<CurrencyExchangeRateHistory>
+     *
+     * @throws \InvalidArgumentException If $start_date is after $end_date
+     */
+    public function getHistoricalExchangeRatesForPeriod(string $base_currency_code, string $target_currency_code, CarbonInterface $start_date, CarbonInterface $end_date): Collection;
+
+    /**
      * Get the last historical rate on or before the given date for a currency pair.
      */
     public function getPreviousHistoricalRate(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): ?CurrencyExchangeRateHistory;

@@ -235,6 +235,25 @@ class FallbackExchangeRateService extends BaseExchangeRateService implements Exc
     }
 
     /**
+     * Get the daily historical exchange rates for a currency pair within a date period via fallback services.
+     *
+     * @return Collection<CurrencyExchangeRateHistory>
+     */
+    public function getHistoricalExchangeRatesForPeriod(string $currency_code, string $target_currency_code, CarbonInterface $start_date, CarbonInterface $end_date): Collection
+    {
+        return $this->tryWithFallback(
+            function ($service) use ($currency_code, $target_currency_code, $start_date, $end_date) {
+                if (! ($service instanceof HistoricalSupportExchangeRateServiceInterface)) {
+                    throw new \RuntimeException('Service does not support historical exchange rates');
+                }
+
+                return $service->getHistoricalExchangeRatesForPeriod($currency_code, $target_currency_code, $start_date, $end_date);
+            },
+            "getHistoricalExchangeRatesForPeriod({$currency_code}, {$target_currency_code})"
+        );
+    }
+
+    /**
      * Get the current active service that succeeded.
      */
     public function getCurrentService(): ?ExchangeRateServiceInterface

@@ -15,6 +15,7 @@ use BrightCreations\ExchangeRates\Traits\CollectableResponse;
 use BrightCreations\ExchangeRates\Traits\TimeLoggable;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
@@ -296,5 +297,30 @@ class ExchangeRateApiService extends BaseExchangeRateService implements Exchange
                 ->where('target_currency_code', $target_currency_code)
                 ->firstOrFail();
         }
+    }
+
+    /**
+     * Get the daily historical exchange rates for a currency pair within a date period (inclusive).
+     * Fetches and stores any missing days from the API before returning.
+     *
+     * @return Collection<CurrencyExchangeRateHistory>
+     */
+    public function getHistoricalExchangeRatesForPeriod(string $currency_code, string $target_currency_code, CarbonInterface $start_date, CarbonInterface $end_date): Collection
+    {
+        $existing = $this->currencyExchangeRateRepository->getHistoricalExchangeRatesForPeriod($currency_code, $target_currency_code, $start_date, $end_date);
+        $existingDates = $existing->map(fn ($rate) => Carbon::parse($rate->date_time)->format('Y-m-d'))->all();
+
+        $missingDays = collect(CarbonPeriod::create($start_date->copy()->startOfDay(), '1 day', $end_date->copy()->startOfDay()))
+            ->reject(fn (Carbon $day) => in_array($day->format('Y-m-d'), $existingDates, true));
+
+        if ($missingDays->isEmpty()) {
+            return $existing;
+        }
+
+        foreach ($missingDays as $day) {
+            $this->storeHistoricalExchangeRates($currency_code, $day);
+        }
+
+        return $this->currencyExchangeRateRepository->getHistoricalExchangeRatesForPeriod($currency_code, $target_currency_code, $start_date, $end_date);
     }
 }

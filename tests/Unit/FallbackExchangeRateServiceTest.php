@@ -294,6 +294,37 @@ test('fallback service delegates getHistoricalExchangeRate through fallback serv
     expect($result)->toBe($expectedRate);
 });
 
+test('fallback service delegates getHistoricalExchangeRatesForPeriod through fallback services', function () {
+    $start = Carbon::parse('2023-01-01');
+    $end = Carbon::parse('2023-01-03');
+    $expectedRates = collect([
+        new CurrencyExchangeRateHistory([
+            'base_currency_code' => 'USD',
+            'target_currency_code' => 'EUR',
+            'exchange_rate' => '0.82',
+            'date_time' => $start,
+        ]),
+    ]);
+
+    $mockService = Mockery::mock(ExchangeRateServiceInterface::class, HistoricalSupportExchangeRateServiceInterface::class);
+    $mockService->shouldReceive('getHistoricalExchangeRatesForPeriod')
+        ->with('USD', 'EUR', $start, $end)
+        ->once()
+        ->andReturn($expectedRates);
+
+    $stubClass = 'StubServiceGetHistoricalPeriod_'.uniqid();
+    eval("class {$stubClass} {}");
+
+    app()->bind($stubClass, fn () => $mockService);
+
+    $fallbackService = new FallbackExchangeRateService;
+    $fallbackService->setFallbackServices([$stubClass]);
+
+    $result = $fallbackService->getHistoricalExchangeRatesForPeriod('USD', 'EUR', $start, $end);
+
+    expect($result)->toBe($expectedRates);
+});
+
 test('fallback service throws exception for historical methods when service does not support historical', function () {
     $date = Carbon::parse('2023-01-15');
 

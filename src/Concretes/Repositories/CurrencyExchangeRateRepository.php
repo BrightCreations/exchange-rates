@@ -282,6 +282,23 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     }
 
     /**
+     * Get the daily historical exchange rates for a currency pair within a date period (inclusive),
+     * ordered by date ascending.
+     */
+    public function getHistoricalExchangeRatesForPeriod(string $base_currency_code, string $target_currency_code, CarbonInterface $start_date, CarbonInterface $end_date): Collection
+    {
+        if ($start_date->greaterThan($end_date)) {
+            throw new \InvalidArgumentException('$start_date must not be after $end_date');
+        }
+
+        return CurrencyExchangeRateHistory::where(compact('base_currency_code', 'target_currency_code'))
+            ->whereDate('date_time', '>=', $start_date->format('Y-m-d'))
+            ->whereDate('date_time', '<=', $end_date->format('Y-m-d'))
+            ->orderBy('date_time')
+            ->get();
+    }
+
+    /**
      * Get the last historical rate on or before the given date for a currency pair.
      */
     public function getPreviousHistoricalRate(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): ?CurrencyExchangeRateHistory

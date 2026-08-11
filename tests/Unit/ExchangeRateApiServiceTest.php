@@ -1,10 +1,12 @@
 <?php
 
 use BrightCreations\ExchangeRates\Concretes\ExchangeRateApiService;
+use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
 use BrightCreations\ExchangeRates\DTOs\HistoricalBaseCurrencyDto;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRate;
 use BrightCreations\ExchangeRates\Models\CurrencyExchangeRateHistory;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Http\Client\PendingRequest;
 
@@ -117,6 +119,44 @@ describe('Store and retrieve exchange rates', function () {
         $this->assertNotEmpty($exchangeRates);
         $this->assertInstanceOf(CurrencyExchangeRateHistory::class, $exchangeRates[0]);
         $this->assertEquals('USD', $exchangeRates[0]->base_currency_code);
+    });
+
+    it('should fetch and store missing days when retrieving exchange rates history for a period', function () {
+        /** @var ExchangeRateApiService $service */
+        $service = $this->service;
+        $start = Carbon::now()->subDays(3)->startOfDay();
+        $end = Carbon::now()->subDays(1)->startOfDay();
+
+        $rates = $service->getHistoricalExchangeRatesForPeriod('USD', 'AUD', $start, $end);
+
+        // 3 days in the period (inclusive), one record per day for the pair
+        $this->assertCount(3, $rates);
+        foreach ($rates as $rate) {
+            $this->assertInstanceOf(CurrencyExchangeRateHistory::class, $rate);
+            $this->assertEquals('USD', $rate->base_currency_code);
+            $this->assertEquals('AUD', $rate->target_currency_code);
+        }
+
+        $dates = $rates->map(fn ($rate) => Carbon::parse($rate->date_time)->format('Y-m-d'))->values()->all();
+        $this->assertEquals(
+            collect(new CarbonPeriod($start, '1 day', $end))->map->format('Y-m-d')->all(),
+            $dates
+        );
+    });
+
+    it('should not re-fetch days already stored when retrieving exchange rates history for a period', function () {
+        /** @var ExchangeRateApiService $service */
+        $service = $this->service;
+        $day = Carbon::now()->subDay()->startOfDay();
+
+        // Pre-seed the day so the period query has no gaps to fill
+        app(CurrencyExchangeRateRepositoryInterface::class)
+            ->updateExchangeRatesHistory('USD', ['AUD' => 1.5], $day);
+
+        $rates = $service->getHistoricalExchangeRatesForPeriod('USD', 'AUD', $day, $day);
+
+        $this->assertCount(1, $rates);
+        $this->assertEquals('1.5', (string) $rates->first()->exchange_rate);
     });
 
     it('should store and retrieve exchange rates history for multiple currencies', function () {

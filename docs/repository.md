@@ -40,6 +40,7 @@ interface CurrencyExchangeRateRepositoryInterface
     public function getPreviousHistoricalRate(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): ?CurrencyExchangeRateHistory;
     public function getNextHistoricalRate(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): ?CurrencyExchangeRateHistory;
     public function getBoundingHistoricalRates(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): Collection;
+    public function getHistoricalExchangeRatesForPeriod(string $base_currency_code, string $target_currency_code, CarbonInterface $start_date, CarbonInterface $end_date): Collection;
 }
 ```
 
@@ -445,6 +446,31 @@ $pairs = [
 ];
 $bounds = $repository->getBulkBoundingHistoricalRates($pairs);
 ```
+
+## Daily rates for a date period
+
+### getHistoricalExchangeRatesForPeriod()
+
+Returns the daily historical rates for a single currency pair across a date range (inclusive of both `$start_date` and `$end_date`), one record per day, ordered by date ascending. Matches by **date portion only** (like `getHistoricalExchangeRate`), and only returns days that actually have a stored rate — it does not synthesize missing days.
+
+```php
+use Carbon\Carbon;
+
+$rates = $repository->getHistoricalExchangeRatesForPeriod(
+    'USD',
+    'EUR',
+    Carbon::parse('2024-01-01'),
+    Carbon::parse('2024-01-31'),
+);
+
+foreach ($rates as $rate) {
+    echo Carbon::parse($rate->date_time)->format('Y-m-d').": {$rate->exchange_rate}\n";
+}
+```
+
+Throws `\InvalidArgumentException` if `$start_date` is after `$end_date`.
+
+This is a DB-only read — it never calls an external provider. To guarantee every day in the range is populated (backfilling gaps from the API when supported), use the service-layer `HistoricalSupportExchangeRateServiceInterface::getHistoricalExchangeRatesForPeriod()` instead (see [Services & Contracts](services.md)).
 
 ### Interpolation (money-converter)
 

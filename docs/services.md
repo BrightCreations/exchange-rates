@@ -68,6 +68,11 @@ interface HistoricalSupportExchangeRateServiceInterface
      * Get a specific historical exchange rate from the database
      */
     public function getHistoricalExchangeRate(string $currency_code, string $target_currency_code, CarbonInterface $date_time): CurrencyExchangeRateHistory;
+
+    /**
+     * Get the daily historical exchange rates for a currency pair within a date period (inclusive)
+     */
+    public function getHistoricalExchangeRatesForPeriod(string $currency_code, string $target_currency_code, CarbonInterface $start_date, CarbonInterface $end_date): Collection;
 }
 ```
 
@@ -257,6 +262,29 @@ $rate = $service->getHistoricalExchangeRate('USD', 'EUR', $date);
 // Returns single CurrencyExchangeRateHistory model
 echo "USD to EUR on {$date->format('Y-m-d')}: {$rate->exchange_rate}\n";
 ```
+
+#### getHistoricalExchangeRatesForPeriod()
+
+Retrieves the daily historical rates for a currency pair across a date range (inclusive of both dates), one record per day:
+
+```php
+use Carbon\Carbon;
+
+$service = app(HistoricalSupportExchangeRateServiceInterface::class);
+
+$rates = $service->getHistoricalExchangeRatesForPeriod(
+    'USD',
+    'EUR',
+    Carbon::parse('2024-01-01'),
+    Carbon::parse('2024-01-31'),
+);
+
+foreach ($rates as $rate) {
+    echo Carbon::parse($rate->date_time)->format('Y-m-d')." USD to EUR: {$rate->exchange_rate}\n";
+}
+```
+
+Auto-fetch behaviour matches `getHistoricalExchangeRate()` per provider: `OpenExchangeRateService` and `ExchangeRateApiService` fetch and store any day in the range that is missing from the database (one API call per missing day) before returning; `WorldBankExchangeRateApiService` only reads what is already stored — pre-populate it with `php artisan exchange-rates:backfill` first. `FallbackExchangeRateService` delegates to the fallback chain like the other historical methods.
 
 ## Service Configuration
 

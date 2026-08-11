@@ -36,4 +36,11 @@ interface HistoricalSupportExchangeRateServiceInterface
      * Get a specific historical exchange rate from the database
      */
     public function getHistoricalExchangeRate(string $currency_code, string $target_currency_code, CarbonInterface $date_time): CurrencyExchangeRateHistory;
+
+    /**
+     * Get the daily historical exchange rates for a currency pair within a date period (inclusive).
+     *
+     * @return Collection<CurrencyExchangeRateHistory>
+     */
+    public function getHistoricalExchangeRatesForPeriod(string $currency_code, string $target_currency_code, CarbonInterface $start_date, CarbonInterface $end_date): Collection;
 }

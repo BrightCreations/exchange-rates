@@ -158,6 +158,38 @@ try {
 }
 ```
 
+##### `getHistoricalExchangeRatesForPeriod(string $currency_code, string $target_currency_code, CarbonInterface $start_date, CarbonInterface $end_date): Collection`
+
+Retrieves the daily historical exchange rates for a currency pair across a date range, inclusive of both `$start_date` and `$end_date`, one record per day.
+
+**Parameters:**
+- `$currency_code` (string) - Base currency code (e.g., 'USD')
+- `$target_currency_code` (string) - Target currency code (e.g., 'EUR')
+- `$start_date` (CarbonInterface) - First date of the period (inclusive)
+- `$end_date` (CarbonInterface) - Last date of the period (inclusive)
+
+**Returns:** `Collection<CurrencyExchangeRateHistory>` - Daily historical rates, ordered by date ascending
+
+**Throws:** `\InvalidArgumentException` - When `$start_date` is after `$end_date`
+
+**Example:**
+```php
+use Carbon\Carbon;
+
+$service = app(HistoricalSupportExchangeRateServiceInterface::class);
+
+$rates = $service->getHistoricalExchangeRatesForPeriod(
+    'USD',
+    'EUR',
+    Carbon::parse('2024-01-01'),
+    Carbon::parse('2024-01-31'),
+);
+
+foreach ($rates as $rate) {
+    echo Carbon::parse($rate->date_time)->format('Y-m-d').": {$rate->exchange_rate}\n";
+}
+```
+
 ## Repository Interface
 
 ### CurrencyExchangeRateRepositoryInterface
@@ -472,6 +504,34 @@ $rates = $repository->getBulkHistoricalExchangeRate($pairs);
 foreach ($rates as $pairKey => $rate) {
     echo "Historical rate for {$pairKey}: {$rate->exchange_rate}\n";
 }
+```
+
+##### `getHistoricalExchangeRatesForPeriod(string $base_currency_code, string $target_currency_code, CarbonInterface $start_date, CarbonInterface $end_date): Collection`
+
+Retrieves the daily historical exchange rates already stored for a currency pair across a date range, inclusive of both dates. DB-only read — does not call an external provider or synthesize missing days.
+
+**Parameters:**
+- `$base_currency_code` (string) - Base currency code
+- `$target_currency_code` (string) - Target currency code
+- `$start_date` (CarbonInterface) - First date of the period (inclusive)
+- `$end_date` (CarbonInterface) - Last date of the period (inclusive)
+
+**Returns:** `Collection<CurrencyExchangeRateHistory>` - Daily historical rates, ordered by date ascending
+
+**Throws:** `\InvalidArgumentException` - When `$start_date` is after `$end_date`
+
+**Example:**
+```php
+use Carbon\Carbon;
+
+$repository = app(CurrencyExchangeRateRepositoryInterface::class);
+
+$rates = $repository->getHistoricalExchangeRatesForPeriod(
+    'USD',
+    'EUR',
+    Carbon::parse('2024-01-01'),
+    Carbon::parse('2024-01-31'),
+);
 ```
 
 ## DTOs

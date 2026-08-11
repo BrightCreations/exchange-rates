@@ -28,6 +28,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static Collection<string, Collection<CurrencyExchangeRateHistory>> getBulkHistoricalExchangeRates(HistoricalBaseCurrencyDto[] $historical_base_currencies)
  * @method static CurrencyExchangeRateHistory getHistoricalExchangeRate(string $base_currency_code, string $target_currency_code, CarbonInterface $date_time)
  * @method static Collection<string, CurrencyExchangeRateHistory> getBulkHistoricalExchangeRate(HistoricalCurrenciesPairDto[] $historical_currencies_pairs)
+ * @method static Collection<CurrencyExchangeRateHistory> getHistoricalExchangeRatesForPeriod(string $base_currency_code, string $target_currency_code, CarbonInterface $start_date, CarbonInterface $end_date)
  * @method static CurrencyExchangeRateHistory|null getPreviousHistoricalRate(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date)
  * @method static CurrencyExchangeRateHistory|null getNextHistoricalRate(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date)
  * @method static Collection<CurrencyExchangeRateHistory> getBoundingHistoricalRates(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date)

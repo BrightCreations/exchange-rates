@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static Collection<CurrencyExchangeRateHistory> storeBulkHistoricalExchangeRatesForMultipleCurrencies(HistoricalBaseCurrencyDto[] $historical_base_currencies)
  * @method static Collection<CurrencyExchangeRateHistory> getHistoricalExchangeRates(string $currency_code, CarbonInterface $date_time)
  * @method static CurrencyExchangeRateHistory getHistoricalExchangeRate(string $currency_code, string $target_currency_code, CarbonInterface $date_time)
+ * @method static Collection<CurrencyExchangeRateHistory> getHistoricalExchangeRatesForPeriod(string $currency_code, string $target_currency_code, CarbonInterface $start_date, CarbonInterface $end_date)
  */
 class HistoricalExchangeRate extends Facade
 {

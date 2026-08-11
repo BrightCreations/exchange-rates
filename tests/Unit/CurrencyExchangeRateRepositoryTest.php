@@ -532,3 +532,76 @@ describe('Bulk bounding historical rates', function () {
         expect($result[(string) $dto])->toBeEmpty();
     });
 });
+
+describe('Historical exchange rates for a date period', function () {
+    $baseCurrency = 'USD';
+    $targetCurrency = 'EUR';
+
+    it('returns one record per day within the period, ordered by date', function () use ($baseCurrency, $targetCurrency) {
+        $this->repository->updateExchangeRatesHistory($baseCurrency, [$targetCurrency => 0.90], Carbon::parse('2024-01-05'));
+        $this->repository->updateExchangeRatesHistory($baseCurrency, [$targetCurrency => 0.91], Carbon::parse('2024-01-03'));
+        $this->repository->updateExchangeRatesHistory($baseCurrency, [$targetCurrency => 0.92], Carbon::parse('2024-01-01'));
+
+        $result = $this->repository->getHistoricalExchangeRatesForPeriod(
+            $baseCurrency,
+            $targetCurrency,
+            Carbon::parse('2024-01-01'),
+            Carbon::parse('2024-01-05'),
+        );
+
+        expect($result)->toHaveCount(3);
+        expect($result->map(fn ($rate) => Carbon::parse($rate->date_time)->toDateString())->all())
+            ->toBe(['2024-01-01', '2024-01-03', '2024-01-05']);
+    });
+
+    it('excludes rates outside the period and for other pairs', function () use ($baseCurrency, $targetCurrency) {
+        $this->repository->updateExchangeRatesHistory($baseCurrency, [$targetCurrency => 0.80], Carbon::parse('2023-12-31'));
+        $this->repository->updateExchangeRatesHistory($baseCurrency, [$targetCurrency => 0.90], Carbon::parse('2024-01-02'));
+        $this->repository->updateExchangeRatesHistory($baseCurrency, [$targetCurrency => 0.95], Carbon::parse('2024-01-10'));
+        $this->repository->updateExchangeRatesHistory($baseCurrency, ['GBP' => 0.75], Carbon::parse('2024-01-02'));
+
+        $result = $this->repository->getHistoricalExchangeRatesForPeriod(
+            $baseCurrency,
+            $targetCurrency,
+            Carbon::parse('2024-01-01'),
+            Carbon::parse('2024-01-05'),
+        );
+
+        expect($result)->toHaveCount(1);
+        expect(Carbon::parse($result->first()->date_time)->toDateString())->toBe('2024-01-02');
+    });
+
+    it('is inclusive of both start and end dates', function () use ($baseCurrency, $targetCurrency) {
+        $this->repository->updateExchangeRatesHistory($baseCurrency, [$targetCurrency => 0.90], Carbon::parse('2024-01-01'));
+        $this->repository->updateExchangeRatesHistory($baseCurrency, [$targetCurrency => 0.95], Carbon::parse('2024-01-05'));
+
+        $result = $this->repository->getHistoricalExchangeRatesForPeriod(
+            $baseCurrency,
+            $targetCurrency,
+            Carbon::parse('2024-01-01'),
+            Carbon::parse('2024-01-05'),
+        );
+
+        expect($result)->toHaveCount(2);
+    });
+
+    it('returns an empty collection when no rates exist in the period', function () use ($baseCurrency, $targetCurrency) {
+        $result = $this->repository->getHistoricalExchangeRatesForPeriod(
+            $baseCurrency,
+            $targetCurrency,
+            Carbon::parse('2024-01-01'),
+            Carbon::parse('2024-01-05'),
+        );
+
+        expect($result)->toBeEmpty();
+    });
+
+    it('throws when start_date is after end_date', function () use ($baseCurrency, $targetCurrency) {
+        expect(fn () => $this->repository->getHistoricalExchangeRatesForPeriod(
+            $baseCurrency,
+            $targetCurrency,
+            Carbon::parse('2024-01-05'),
+            Carbon::parse('2024-01-01'),
+        ))->toThrow(\InvalidArgumentException::class);
+    });
+});

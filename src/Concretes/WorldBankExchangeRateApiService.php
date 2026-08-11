@@ -247,6 +247,17 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
     }
 
     /**
+     * Get the daily historical exchange rates for a currency pair within a date period (inclusive).
+     * World Bank data is DB-only (pre-populated via `exchange-rates:backfill`); no auto-fetch.
+     *
+     * @return Collection<CurrencyExchangeRateHistory>
+     */
+    public function getHistoricalExchangeRatesForPeriod(string $currency_code, string $target_currency_code, CarbonInterface $start_date, CarbonInterface $end_date): Collection
+    {
+        return $this->currencyExchangeRateRepository->getHistoricalExchangeRatesForPeriod($currency_code, $target_currency_code, $start_date, $end_date);
+    }
+
+    /**
      * Store exchange rates for multiple currencies
      * This is optimized to fetch World Bank data once and compute rates for all currencies
      *
