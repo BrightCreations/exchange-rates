@@ -10,9 +10,12 @@ fallback, database caching, and historical-rate support. It is a Composer depend
 by DAZU apps (currently `dazu-core`), not deployed on its own.
 
 - **PHP**: `>=8.1`
-- **Laravel**: `illuminate/support|database|http|console` `^9.0|^10.0|^11.0|^12.0` (framework
+- **Laravel**: `illuminate/support|database|http|console` `^9.0|^10.0|^11.0|^12.0|^13.0` (framework
   version-agnostic within that range; auto-discovered via `extra.laravel.providers` in
-  `composer.json`)
+  `composer.json`). Laravel 13 needs PHP 8.3+ and brings Guzzle 8 and `brick/math` 1.0.
+- **`brick/math`**: declared directly (`>=0.11 <2.0`). 1.0 no longer accepts floats in `BigDecimal::of()`
+  (PHP truncates `0.83` to `0`), so every rate goes through `CurrencyExchangeRateRepository::toBigDecimal()`,
+  which casts floats to string. Don't call `BigDecimal::of()` on a provider rate directly.
 - **Public API entry points**:
   - `BrightCreations\ExchangeRates\Facades\ExchangeRate` — current-rate operations
     (`storeExchangeRates()`, `storeBulkExchangeRatesForMultipleCurrencies()`,

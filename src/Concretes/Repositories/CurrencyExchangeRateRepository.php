@@ -18,6 +18,19 @@ use Illuminate\Support\Facades\DB;
 class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryInterface
 {
     /**
+     * Build a BigDecimal from a provider rate without losing its fraction.
+     *
+     * brick/math 1.0 no longer accepts floats: PHP coerces 0.83 to int 0, which the callers
+     * then skip as a zero rate. Casting to string is what brick/math 0.14 did itself.
+     *
+     * @param  string|float|int  $rate
+     */
+    private function toBigDecimal($rate): BigDecimal
+    {
+        return BigDecimal::of(is_float($rate) ? (string) $rate : $rate);
+    }
+
+    /**
      * Calculate the reversed exchange rate (1 / rate) with proper precision and rounding.
      *
      * @param  string|float|int  $rate  The exchange rate to reverse
@@ -27,7 +40,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
      */
     private function calculateReversedRate($rate): string
     {
-        $rateBigDecimal = BigDecimal::of($rate);
+        $rateBigDecimal = $this->toBigDecimal($rate);
 
         if ($rateBigDecimal->isZero()) {
             throw new \InvalidArgumentException('Cannot calculate reversed rate: exchange rate cannot be zero');
@@ -42,7 +55,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     {
         $dataToInsert = [];
         foreach ($exchange_rates as $code => $rate) {
-            $rateBigDecimal = BigDecimal::of($rate);
+            $rateBigDecimal = $this->toBigDecimal($rate);
 
             if ($rateBigDecimal->isZero()) {
                 continue;
@@ -72,7 +85,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 throw new \InvalidArgumentException('Exchange rate must be an instance of \BrightCreations\ExchangeRates\Dtos\ExchangeRatesDto');
             }
             foreach ($exchange_rate->getExchangeRates() as $code => $rate) {
-                $rateBigDecimal = BigDecimal::of($rate);
+                $rateBigDecimal = $this->toBigDecimal($rate);
 
                 if ($rateBigDecimal->isZero()) {
                     continue;
@@ -99,7 +112,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     {
         $dataToInsert = [];
         foreach ($exchange_rates as $code => $rate) {
-            $rateBigDecimal = BigDecimal::of($rate);
+            $rateBigDecimal = $this->toBigDecimal($rate);
 
             if ($rateBigDecimal->isZero()) {
                 continue;
@@ -138,7 +151,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                 throw new \InvalidArgumentException('Historical exchange rate must be an instance of \BrightCreations\ExchangeRates\Dtos\HistoricalExchangeRatesDto');
             }
             foreach ($historical_exchange_rate->getExchangeRates() as $code => $rate) {
-                $rateBigDecimal = BigDecimal::of($rate);
+                $rateBigDecimal = $this->toBigDecimal($rate);
 
                 if ($rateBigDecimal->isZero()) {
                     continue;
