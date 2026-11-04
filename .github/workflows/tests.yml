@@ -24,7 +24,7 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v5
 
     - name: Setup PHP
       uses: shivammathur/setup-php@v2
@@ -41,7 +41,9 @@ jobs:
       if: matrix.laravel == '13'
       run: composer update --prefer-dist --no-interaction -W --with "illuminate/support:^13.0" --with "orchestra/testbench:^11.0"
 
+    # Style is checked with the locked Pint only; the Laravel 13 update above also upgrades Pint, whose new rules would fail unrelated pushes
     - name: Run Pint
+      if: matrix.laravel == '12'
       run: vendor/bin/pint --test
 
     - name: Execute tests (Unit and Feature tests) via Pest
