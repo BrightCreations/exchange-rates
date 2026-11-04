@@ -75,7 +75,8 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
         private PendingRequest $http,
         private CurrencyExchangeRateRepositoryInterface $currencyExchangeRateRepository,
     ) {
-        $this->http->baseUrl(Config::get('exchange-rates.services.world_bank_exchange_rate.base_url'))
+        $this->applyHttpTimeouts($this->http)
+            ->baseUrl(Config::get('exchange-rates.services.world_bank_exchange_rate.base_url'))
             ->withHeaders([
                 'Accept' => 'application/json',
             ])
@@ -138,11 +139,9 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
             return collect();
         }
 
-        // Get last update date from metadata
-        $lastUpdated = $worldBankData[0]['lastupdated'] ?? null;
-        $timestamp = $lastUpdated ? Carbon::parse($lastUpdated) : Carbon::now();
-
-        // Update the database
+        // Update the database. History is keyed on when the rates were fetched, never on the
+        // dataset's `lastupdated` date: that is an unrelated past day, and upserting there would
+        // overwrite another provider's daily rates for it.
         $this->currencyExchangeRateRepository->updateExchangeRates(
             $currency_code,
             $exchangeRates,
@@ -151,7 +150,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
         $this->currencyExchangeRateRepository->updateExchangeRatesHistory(
             $currency_code,
             $exchangeRates,
-            $timestamp,
+            Carbon::now(),
             $this->getProviderName(),
         );
 
@@ -189,6 +188,8 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
      */
     public function storeHistoricalExchangeRates(string $currency_code, CarbonInterface $date_time): Collection
     {
+        $this->ensureHistoricalRatesCanExist($currency_code, $date_time);
+
         $year = $date_time->format('Y');
 
         // Get response from the API (cached)
@@ -205,15 +206,13 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
             return collect();
         }
 
-        // Get last update date from metadata or use provided date
-        $lastUpdated = $worldBankData[0]['lastupdated'] ?? null;
-        $timestamp = $lastUpdated ? Carbon::parse($lastUpdated) : $date_time;
-
-        // Update the database
+        // Store the yearly rates under the requested date, like the daily providers do. The
+        // dataset's `lastupdated` date is unrelated to the requested year: every year would land
+        // on that one day, overwriting each other and that day's daily rates.
         $this->currencyExchangeRateRepository->updateExchangeRatesHistory(
             $currency_code,
             $exchangeRates,
-            $timestamp,
+            $date_time,
             $this->getProviderName(),
         );
 
@@ -222,8 +221,9 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
             new HistoricalExchangeRatesDto(
                 $currency_code,
                 $exchangeRates,
-                $timestamp,
-            )
+                $date_time,
+            ),
+            $this->getProviderName(),
         );
     }
 
@@ -282,9 +282,8 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
             return collect();
         }
 
-        // Get last update date from metadata
-        $lastUpdated = $worldBankData[0]['lastupdated'] ?? null;
-        $timestamp = $lastUpdated ? Carbon::parse($lastUpdated) : Carbon::now();
+        // History is keyed on when the rates were fetched (see storeExchangeRates())
+        $timestamp = Carbon::now();
 
         // Construct DTOs
         $dtos = [];
@@ -318,6 +317,8 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
         // Group by year for efficient fetching
         $currenciesByYear = [];
         foreach ($historical_base_currencies as $historicalBaseCurrency) {
+            $this->ensureHistoricalRatesCanExist($historicalBaseCurrency->getBaseCurrencyCode(), $historicalBaseCurrency->getDateTime());
+
             $year = $historicalBaseCurrency->getDateTime()->format('Y');
             $currenciesByYear[$year][] = $historicalBaseCurrency;
         }
@@ -330,10 +331,6 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
                 return $this->fetchWorldBankData((int) $year);
             });
 
-            // Get last update date from metadata
-            $lastUpdated = $worldBankData[0]['lastupdated'] ?? null;
-            $timestamp = $lastUpdated ? Carbon::parse($lastUpdated) : Carbon::create((int) $year);
-
             // Extract currency codes
             $currencyCodes = array_map(
                 fn ($hbc) => $hbc->getBaseCurrencyCode(),
@@ -343,10 +340,20 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
             // Extract exchange rates for all requested currencies
             $multiBaseRates = $this->extractExchangeRatesForMultipleCurrencies($currencyCodes, $worldBankData);
 
-            foreach ($multiBaseRates as $baseCurrency => $rates) {
-                $historicalDtos[] = new HistoricalExchangeRatesDto($baseCurrency, $rates, $timestamp);
+            // One DTO per requested (currency, date), stored under that date — see storeHistoricalExchangeRates()
+            foreach ($historicalCurrencies as $historicalBaseCurrency) {
+                $baseCurrency = $historicalBaseCurrency->getBaseCurrencyCode();
+                $dateTime = $historicalBaseCurrency->getDateTime();
+
+                if (empty($multiBaseRates[$baseCurrency])) {
+                    continue;
+                }
+
+                $historicalDtos[$baseCurrency.'|'.$dateTime->format('Y-m-d H:i:s')] = new HistoricalExchangeRatesDto($baseCurrency, $multiBaseRates[$baseCurrency], $dateTime);
             }
         }
+
+        $historicalDtos = array_values($historicalDtos);
 
         if (empty($historicalDtos)) {
             logger()->warning('No historical exchange rates found from World Bank');
@@ -360,7 +367,7 @@ class WorldBankExchangeRateApiService extends BaseExchangeRateService implements
         // Construct models
         $data = collect();
         foreach ($historicalDtos as $dto) {
-            $data->push(CurrencyExchangeRateHistory::constructFromHistoricalExchangeRatesDto($dto));
+            $data->push(CurrencyExchangeRateHistory::constructFromHistoricalExchangeRatesDto($dto, $this->getProviderName()));
         }
 
         return $data->flatten()->groupBy(['base_currency_code', fn ($item) => $item->date_time->format('Y-m-d')]);

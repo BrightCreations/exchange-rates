@@ -2,13 +2,13 @@
 
 namespace BrightCreations\ExchangeRates\Traits;
 
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Response;
 
 trait TimeLoggable
 {
     /**
-     * Logs the time taken by the closure to execute and if the result is a PSR7 ResponseInterface,
+     * Logs the time taken by the closure to execute and if the result is an HTTP client response,
      * it logs the response as well.
      *
      * @param  Closure  $closure
@@ -23,8 +23,12 @@ trait TimeLoggable
         Log::debug("[BrightCreations\ExchangeRates] >>>>> Time: ".$time);
         if ($result instanceof Response) {
             Log::debug("[BrightCreations\ExchangeRates] >>>>> Response: ".json_encode($result->json()));
-        } else {
+        } elseif (is_scalar($result) || $result === null || $result instanceof \Stringable) {
             Log::debug("[BrightCreations\ExchangeRates] >>>>> Closure Return: ".$result);
+        } else {
+            // e.g. the World Bank dataset array: concatenating it would raise "Array to string conversion"
+            $size = is_countable($result) ? ' ('.count($result).' items)' : '';
+            Log::debug("[BrightCreations\ExchangeRates] >>>>> Closure Return: ".get_debug_type($result).$size);
         }
 
         return $result;

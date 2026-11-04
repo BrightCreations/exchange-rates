@@ -66,7 +66,8 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
         private PendingRequest $http,
         private CurrencyExchangeRateRepositoryInterface $currencyExchangeRateRepository,
     ) {
-        $this->http->baseUrl(Config::get('exchange-rates.services.open_exchange_rate.base_url'))
+        $this->applyHttpTimeouts($this->http)
+            ->baseUrl(Config::get('exchange-rates.services.open_exchange_rate.base_url'))
             ->withHeaders([
                 'Accept' => 'application/json',
                 'Authorization' => 'Token '.Config::get('exchange-rates.services.open_exchange_rate.app_id'),
@@ -138,6 +139,8 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
      */
     public function storeHistoricalExchangeRates(string $currency_code, CarbonInterface $date_time): Collection
     {
+        $this->ensureHistoricalRatesCanExist($currency_code, $date_time);
+
         // Get response from the API
         $year = $date_time->format('Y');
         $month = $date_time->format('m');
@@ -161,7 +164,8 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
                 $response->get('base'),
                 $response->get('rates'),
                 $date_time,
-            )
+            ),
+            $this->getProviderName(),
         );
     }
 
@@ -197,7 +201,7 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
 
     /**
      * Get the daily historical exchange rates for a currency pair within a date period (inclusive).
-     * Fetches and stores any missing days from the API before returning.
+     * Fetches and stores any missing past days from the API before returning; future days are skipped.
      *
      * @return Collection<CurrencyExchangeRateHistory>
      */
@@ -207,7 +211,7 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
         $existingDates = $existing->map(fn ($rate) => Carbon::parse($rate->date_time)->format('Y-m-d'))->all();
 
         $missingDays = collect(CarbonPeriod::create($start_date->copy()->startOfDay(), '1 day', $end_date->copy()->startOfDay()))
-            ->reject(fn (Carbon $day) => in_array($day->format('Y-m-d'), $existingDates, true));
+            ->reject(fn (Carbon $day) => in_array($day->format('Y-m-d'), $existingDates, true) || $this->isFutureDate($day));
 
         if ($missingDays->isEmpty()) {
             return $existing;
@@ -277,6 +281,10 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
      */
     public function storeBulkHistoricalExchangeRatesForMultipleCurrencies(array $historical_base_currencies): Collection
     {
+        foreach ($historical_base_currencies as $historical_base_currency) {
+            $this->ensureHistoricalRatesCanExist($historical_base_currency->getBaseCurrencyCode(), $historical_base_currency->getDateTime());
+        }
+
         // Get responses from the API
         $responses = $this->logTime(function () use ($historical_base_currencies) {
             $responses = collect();
@@ -312,7 +320,7 @@ class OpenExchangeRateService extends BaseExchangeRateService implements Exchang
         // Construct models
         $data = collect();
         foreach ($historical_dtos as $dto) {
-            $data->push(CurrencyExchangeRateHistory::constructFromHistoricalExchangeRatesDto($dto));
+            $data->push(CurrencyExchangeRateHistory::constructFromHistoricalExchangeRatesDto($dto, $this->getProviderName()));
         }
 
         return $data->flatten()->groupBy(['base_currency_code', fn ($item) => $item->date_time->format('Y-m-d')]);

@@ -401,6 +401,35 @@ $worldBankService = app(WorldBankExchangeRateApiService::class);
 $rates = $worldBankService->storeExchangeRates('EUR');
 ```
 
+### Avoiding wasted API calls
+
+- **Future dates**: historical fetches for a date after today (UTC) throw
+  `Exceptions\HistoricalRatesUnavailableException` before any HTTP call, since no provider has
+  those rates yet. Through the fallback service this means every provider is skipped without a request.
+- **Provider suspension**: the fallback service temporarily skips a provider whose error means
+  retrying is pointless. Database reads are never skipped, and historical getters return stored
+  rates before asking any provider.
+
+```php
+'fallback_suspension' => [
+    // HTTP 401/429, `quota-reached`, `invalid-key`, `access_restricted`, ...: skip for every operation
+    'unavailable_seconds' => 3600,
+    // `plan-upgrade-required` (e.g. ExchangeRate-API free plan): skip for historical operations
+    'historical_unsupported_seconds' => 86400,
+],
+```
+
+  Set either to `0` to disable it. Suspensions live in the default cache store.
+- **Provisional rates**: providers listed in `provisional_providers` (default: World Bank, whose
+  rates are yearly averages) are a last resort. Exact lookups prefer a daily rate for the same date,
+  interpolation bounds use daily rates only, and `CurrencyExchangeRateHistory::isProvisional()` tells
+  them apart. Schedule `php artisan exchange-rates:refresh-provisional` (daily; `--days=30`,
+  `--limit=100`) to replace provisional rates with daily ones once a daily provider has the date —
+  the daily rates are stored under the same `date_time`, so they overwrite the provisional rows.
+- **HTTP timeouts**: `http.timeout` / `http.connect_timeout` (seconds, env
+  `EXCHANGE_RATES_HTTP_TIMEOUT` / `EXCHANGE_RATES_HTTP_CONNECT_TIMEOUT`) cap each provider call.
+  Unset keeps Laravel's defaults (30s / 10s).
+
 ---
 
 ## 🤝 Contributing

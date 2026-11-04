@@ -34,6 +34,31 @@ return [
         WorldBankExchangeRateApiService::class,
     ],
 
+    // Providers (stored provider names) whose rates are period averages rather than daily rates —
+    // World Bank publishes yearly averages. They are a last resort: exact lookups prefer a daily
+    // rate for the same date, interpolation never uses them as bounds, and
+    // `exchange-rates:refresh-provisional` replaces them once a daily provider has the date.
+    'provisional_providers' => [
+        'WorldBankExchangeRateApiService',
+    ],
+
+    // Temporarily skip a provider whose errors mean retrying is pointless (seconds; 0 disables).
+    // - unavailable_seconds: after an exhausted quota or rejected credentials (HTTP 401/429,
+    //   e.g. `quota-reached`, `invalid-key`, `access_restricted`), for every operation.
+    // - historical_unsupported_seconds: after the plan rejects historical requests
+    //   (e.g. ExchangeRate-API `plan-upgrade-required` on the free plan), for historical operations.
+    'fallback_suspension' => [
+        'unavailable_seconds' => (int) env('EXCHANGE_RATES_PROVIDER_UNAVAILABLE_SECONDS', 3600),
+        'historical_unsupported_seconds' => (int) env('EXCHANGE_RATES_PROVIDER_HISTORICAL_UNSUPPORTED_SECONDS', 86400),
+    ],
+
+    // HTTP timeouts (seconds) for provider API calls. Unset keeps Laravel's HTTP client
+    // defaults (30s request, 10s connect).
+    'http' => [
+        'timeout' => env('EXCHANGE_RATES_HTTP_TIMEOUT'),
+        'connect_timeout' => env('EXCHANGE_RATES_HTTP_CONNECT_TIMEOUT'),
+    ],
+
     // exchange rate services
     'services' => [
         // @see https://www.exchangerate-api.com/

@@ -5,6 +5,7 @@ namespace BrightCreations\ExchangeRates;
 use BrightCreations\ExchangeRates\Concretes\Repositories\CurrencyExchangeRateRepository;
 use BrightCreations\ExchangeRates\Console\Commands\BackfillExchangeRatesCommand;
 use BrightCreations\ExchangeRates\Console\Commands\MigrateExchangeRatesCommand;
+use BrightCreations\ExchangeRates\Console\Commands\RefreshProvisionalExchangeRatesCommand;
 use BrightCreations\ExchangeRates\Contracts\ExchangeRateServiceInterface;
 use BrightCreations\ExchangeRates\Contracts\HistoricalSupportExchangeRateServiceInterface;
 use BrightCreations\ExchangeRates\Contracts\Repositories\CurrencyExchangeRateRepositoryInterface;
@@ -77,6 +78,7 @@ class ExchangeRatesServiceProvider extends ServiceProvider
         $this->commands([
             MigrateExchangeRatesCommand::class,
             BackfillExchangeRatesCommand::class,
+            RefreshProvisionalExchangeRatesCommand::class,
         ]);
     }
 }

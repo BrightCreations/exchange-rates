@@ -233,8 +233,13 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
 
     public function getHistoricalExchangeRates(string $base_currency_code, CarbonInterface $date_time): Collection
     {
-        return CurrencyExchangeRateHistory::where(compact('base_currency_code'))
-            ->whereDate('date_time', $date_time->format('Y-m-d'))->get();
+        $rates = CurrencyExchangeRateHistory::where(compact('base_currency_code'))
+            ->whereDate('date_time', $date_time->format('Y-m-d'))->dailyFirst()->get();
+
+        // A provisional (period-average) rate only stands in for a target that has no daily rate that day
+        $dailyTargets = $rates->reject->isProvisional()->pluck('target_currency_code')->flip();
+
+        return $rates->reject(fn (CurrencyExchangeRateHistory $rate) => $rate->isProvisional() && $dailyTargets->has($rate->target_currency_code))->values();
     }
 
     public function getBulkHistoricalExchangeRates(array $historical_base_currencies): Collection
@@ -256,6 +261,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                     });
                 }
             })
+            ->dailyFirst()
             ->get()
             ->groupBy(fn ($row) => $row->base_currency_code.'_'.Carbon::parse($row->date_time)->format('Y-m-d'));
     }
@@ -263,7 +269,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
     public function getHistoricalExchangeRate(string $base_currency_code, string $target_currency_code, CarbonInterface $date_time): CurrencyExchangeRateHistory
     {
         return CurrencyExchangeRateHistory::where(compact('base_currency_code', 'target_currency_code'))
-            ->whereDate('date_time', $date_time->format('Y-m-d'))->firstOrFail();
+            ->whereDate('date_time', $date_time->format('Y-m-d'))->dailyFirst()->firstOrFail();
     }
 
     public function getBulkHistoricalExchangeRate(array $historical_currencies_pairs): Collection
@@ -286,6 +292,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
                     });
                 }
             })
+            ->dailyFirst()
             ->get()
             ->groupBy([
                 'base_currency_code',
@@ -344,8 +351,10 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
      */
     public function getBoundingHistoricalRates(string $base_currency_code, string $target_currency_code, CarbonInterface $target_date): Collection
     {
-        $before = $this->getPreviousHistoricalRate($base_currency_code, $target_currency_code, $target_date);
-        $after = $this->getNextHistoricalRate($base_currency_code, $target_currency_code, $target_date);
+        // Interpolate between daily rates only: a provisional (period-average) rate is not a point in time
+        $pair = CurrencyExchangeRateHistory::where(compact('base_currency_code', 'target_currency_code'))->excludingProvisional();
+        $before = (clone $pair)->where('date_time', '<=', $target_date)->orderBy('date_time', 'desc')->first();
+        $after = (clone $pair)->where('date_time', '>=', $target_date)->orderBy('date_time', 'asc')->first();
 
         if (! $before || ! $after) {
             return collect();
@@ -398,7 +407,7 @@ class CurrencyExchangeRateRepository implements CurrencyExchangeRateRepositoryIn
             $rates = CurrencyExchangeRateHistory::where([
                 'base_currency_code' => $first->getBaseCurrencyCode(),
                 'target_currency_code' => $first->getTargetCurrencyCode(),
-            ])->orderBy('date_time')->get();
+            ])->excludingProvisional()->orderBy('date_time')->get();
 
             foreach ($dtos as $dto) {
                 $results[(string) $dto] = $this->computeBoundingFromRates($rates, $dto->getDateTime());

@@ -72,6 +72,15 @@ No static analysis tool (PHPStan/Psalm) is configured. Tests use Orchestra Testb
 
 - **Fallback order** is configured in `config/exchange-rates.php` (`fallback_order`,
   `default_service`); default order is Open Exchange Rates → Exchange Rate API → World Bank.
+  The fallback service skips a provider for a while after quota/credential errors (all operations)
+  or a plan rejecting historical requests (historical only) — `fallback_suspension`, cached in the
+  default store — but never skips database reads; historical getters read the DB once before any provider.
+- **Provisional rates**: rows from `provisional_providers` (World Bank: yearly averages) are a last
+  resort — `dailyFirst()` / `excludingProvisional()` scopes on `CurrencyExchangeRateHistory` order
+  exact lookups and filter interpolation bounds; `exchange-rates:refresh-provisional` re-fetches those
+  dates from the daily providers (same `date_time`, so the upsert replaces them).
+- **Future dates**: every provider's historical fetch throws `HistoricalRatesUnavailableException`
+  for a date after today (UTC) before making an HTTP call (`BaseExchangeRateService::ensureHistoricalRatesCanExist()`).
 - **Historical fetch behavior differs per provider**: `OpenExchangeRateService` and
   `ExchangeRateApiService` auto-fetch-and-store on a DB miss; `WorldBankExchangeRateApiService`
   is DB-only for historical data and must be pre-populated with
